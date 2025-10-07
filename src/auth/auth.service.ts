@@ -140,18 +140,14 @@ export class AuthService {
   private getUserPermissions(role: UserRole): string[] {
     const permissions: Record<UserRole, string[]> = {
       [UserRole.ADMIN]: [
-        'dashboard:read',
         'users:read',
         'users:write',
         'users:delete',
-        'orders:read',
-        'orders:write',
-        'products:read',
-        'products:write',
-        'settings:read',
-        'settings:write',
       ],
-      [UserRole.USER]: ['profile:read', 'profile:write', 'orders:read'],
+      [UserRole.USER]: [
+        'profile:read', 
+        'profile:write'
+      ],
     };
 
     return permissions[role] || permissions[UserRole.USER];

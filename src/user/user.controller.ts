@@ -20,6 +20,7 @@ import { Public } from '../commons/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/commons/guards/roles.guard';
 import { UserRole } from './user.enum';
+import { MongoIdDto } from 'src/commons/dtos/mongo-id.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,20 +46,20 @@ export class UsersController {
 
   @Get(':id')
   @Roles(UserRole.ADMIN)
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(@Param() params: MongoIdDto) {
+    return this.usersService.findOne(params.id);
   }
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  async update(@Param() params: MongoIdDto, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(params.id, updateUserDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(UserRole.ADMIN)
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(@Param() params: MongoIdDto) {
+    return this.usersService.remove(params.id);
   }
 }

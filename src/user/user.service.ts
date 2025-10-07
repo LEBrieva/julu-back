@@ -13,7 +13,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     const existingUser = await this.userModel.findOne({ email: createUserDto.email });
     
     if (existingUser) {
@@ -72,7 +72,7 @@ export class UsersService {
     };
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<UserDocument | null> { 
     const user = await this.userModel.findById(id).select('-password').exec();
     
     if (!user) {

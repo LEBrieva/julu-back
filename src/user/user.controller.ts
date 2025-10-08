@@ -14,7 +14,9 @@ import {
 import { CreateUserDto } from './dtos/create-user.dto';
 import { FilterUserDto } from './dtos/filter-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { UsersPaginatedResponse } from './dtos/users-paginated.response';
 import { UsersService } from './user.service';
+import { UserMapper } from './user.mapper';
 import { Roles } from '../commons/decorators/roles.decorator';
 import { Public } from '../commons/decorators/public.decorator';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
@@ -40,8 +42,9 @@ export class UsersController {
 
   @Get()
   @Roles(UserRole.ADMIN)
-  findAll(@Query() filterDto: FilterUserDto) {
-    return this.usersService.findAll(filterDto);
+  async findAll(@Query() filterDto: FilterUserDto): Promise<UsersPaginatedResponse> {
+    const result = await this.usersService.findAll(filterDto);
+    return UserMapper.toPaginatedResponse(result.users, result.pagination);
   }
 
   @Get(':id')

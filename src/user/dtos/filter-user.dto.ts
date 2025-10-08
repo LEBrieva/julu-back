@@ -1,7 +1,8 @@
 import { IsOptional, IsEnum, IsString } from 'class-validator';
 import { UserRole, UserStatus } from '../user.enum';
+import { FilterBaseInput } from 'src/commons/inputs/filter-base.interface';
 
-export class FilterUserDto {
+export class FilterUserDto extends FilterBaseInput {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
@@ -10,15 +11,4 @@ export class FilterUserDto {
   @IsEnum(UserStatus)
   status?: UserStatus;
 
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @IsOptional()
-  @IsString()
-  page?: string;
-
-  @IsOptional()
-  @IsString()
-  limit?: string;
 }

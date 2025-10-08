@@ -32,7 +32,7 @@ export class UsersService {
   }
 
   async findAll(filterDto: FilterUserDto) {
-    const { role, status, search, page = '1', limit = '10' } = filterDto;
+    const { role, status, search, page = 1, limit = 10 } = filterDto;
     
     const query: any = {};
     
@@ -46,8 +46,8 @@ export class UsersService {
       ];
     }
 
-    const pageNum = parseInt(page);
-    const limitNum = parseInt(limit);
+    const pageNum = page;
+    const limitNum = limit;
     const skip = (pageNum - 1) * limitNum;
 
     const [users, total] = await Promise.all([
@@ -67,7 +67,7 @@ export class UsersService {
         page: pageNum,
         limit: limitNum,
         total,
-        pages: Math.ceil(total / limitNum),
+        totalPages: Math.ceil(total / limitNum),
       },
     };
   }

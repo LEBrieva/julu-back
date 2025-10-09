@@ -3,12 +3,14 @@ import { PaginatedResponse } from 'src/commons/interfaces/pagination.interface';
 export interface FilterProductResponse {
   id: string;
   name: string;
+  code: string;
   basePrice: number;
   status: string;
   category?: string;
+  style?: string;
   totalVariants: number;
   totalStock: number;
-  images?: string[];
+  tags?: string[];
 }
 
 export interface FilterProductsPaginatedResponse extends PaginatedResponse<FilterProductResponse> {}

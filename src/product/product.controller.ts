@@ -1,5 +1,4 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from "@nestjs/common";
-import { CreateProductResponse } from "./dtos/create-product.response";
 import { ProductMapper } from "./product.mapper";
 import { UserRole } from "src/user/user.enum";
 import { Roles } from "src/commons/decorators/roles.decorator";
@@ -7,6 +6,7 @@ import { FilterProductsPaginatedResponse } from "./dtos/filter-product.response"
 import { ProductService } from "./product.service";
 import { FilterProductDto } from "./dtos/filter-product.dto";
 import { CreateProductDto } from "./dtos/create-product.dto";
+import { ProductResponse } from "./dtos/product.response";
 
 
 @Controller('products')
@@ -17,9 +17,9 @@ export class ProductController{
     @Post()
     @Roles(UserRole.ADMIN)
     @HttpCode(HttpStatus.CREATED)
-    async create(@Body() createProductDto: CreateProductDto): Promise<CreateProductResponse> {
+    async create(@Body() createProductDto: CreateProductDto): Promise<ProductResponse> {
         const product = await this.productService.create(createProductDto);
-        return ProductMapper.toCreateResponse(product);
+        return ProductMapper.toProductResponse(product);
     }
 
     @Get()
@@ -27,5 +27,19 @@ export class ProductController{
     async findAll(@Query() filterDto: FilterProductDto): Promise<FilterProductsPaginatedResponse> {
         const result = await this.productService.findAll(filterDto);
         return ProductMapper.toFilterListResponse(result.products, result.pagination);
+    }
+
+    @Get('findById')
+    @Roles(UserRole.ADMIN)
+    async findById(@Query('id') id: string) {
+        const product = await this.productService.findById(id);
+        return ProductMapper.toProductResponse(product);
+    }
+
+    @Get('findByCode')
+    @Roles(UserRole.ADMIN)
+    async findByCode(@Query('code') code: string) {
+        const product = await this.productService.findByCode(code);
+        return ProductMapper.toProductResponse(product);
     }
 }

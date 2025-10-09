@@ -1,28 +1,14 @@
 import { PaginationMeta } from "src/commons/interfaces/pagination.interface";
-import { CreateProductResponse } from "./dtos/create-product.response";
 import { FilterProductResponse, FilterProductsPaginatedResponse } from "./dtos/filter-product.response";
 import { ProductDocument } from "./schemas/product.schema";
+import { ProductResponse } from "./dtos/product.response";
 
 export class ProductMapper {
-  static toCreateResponse(product: ProductDocument): CreateProductResponse {
+  static toProductResponse(product: ProductDocument): ProductResponse {
     return {
       id: String(product._id),
       name: product.name,
-    };
-  }
-
-  static toListResponse(products: ProductDocument[]) {
-    return products.map(product => this.toCreateResponse(product));
-  }
-
-  static toSummary(product: ProductDocument) {
-    return {
-      id: String(product._id),
-      name: product.name,
-      basePrice: product.basePrice,
-      status: product.status,
-      totalVariants: product.variants.length,
-      totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
+      code: product.code,
     };
   }
 
@@ -30,12 +16,14 @@ export class ProductMapper {
     return {
       id: String(product._id),
       name: product.name,
+      code: product.code,
       basePrice: product.basePrice,
       status: product.status,
       category: product.category,
+      style: product.style,
+      tags: product.tags,
       totalVariants: product.variants.length,
       totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
-      images: product.images,
     };
   }
 

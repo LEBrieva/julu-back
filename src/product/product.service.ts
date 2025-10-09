@@ -41,17 +41,13 @@ export class ProductService {
         
         if (category) query.category = category;
         if (style) query.style = style;
-        if (code) query.code = code;
+        if (code) query.code = { $regex: code, $options: 'i' };
         if (status) query.status = status;
         if (tags) query.tags = { $in: tags };
         if (size) query['variants.size'] = size;
         if (color) query['variants.color'] = color;
-        if (search) {
-          query.$or = [
-            { name: { $regex: search, $options: 'i' } },
-          ];
-        }
-    
+        if (search) query.name = { $regex: search, $options: 'i' };
+
         const pageNum = page;
         const limitNum = limit;
         const skip = (pageNum - 1) * limitNum;

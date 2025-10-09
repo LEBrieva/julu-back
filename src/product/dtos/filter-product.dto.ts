@@ -12,6 +12,10 @@ export class FilterProductDto extends FilterBaseDto {
     @IsOptional()
     style?: ProductStyle;
 
+    @IsString()
+    @IsOptional()
+    code?: string;
+
     @IsOptional()
     @IsArray()
     tags?: string[];

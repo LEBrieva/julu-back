@@ -19,13 +19,10 @@ import { UsersService } from './user.service';
 import { UserMapper } from './user.mapper';
 import { Roles } from '../commons/decorators/roles.decorator';
 import { Public } from '../commons/decorators/public.decorator';
-import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/commons/guards/roles.guard';
 import { UserRole } from './user.enum';
 import { MongoIdDto } from 'src/commons/dtos/mongo-id.dto';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

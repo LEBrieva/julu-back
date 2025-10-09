@@ -5,6 +5,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { ProductModule } from './product/product.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
+import { RolesGuard } from './commons/guards/roles.guard';
 
 @Module({
   imports: [
@@ -13,9 +17,20 @@ import { AuthModule } from './auth/auth.module';
     }),
     MongooseModule.forRoot(process.env.MONGODB_URI!),
     UsersModule,
-    AuthModule
+    AuthModule,
+    ProductModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

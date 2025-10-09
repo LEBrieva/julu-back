@@ -4,6 +4,7 @@ import { Product, ProductDocument } from "./schemas/product.schema";
 import { Model } from "mongoose";
 import { CreateProductDto } from "./dtos/create-product.dto";
 import { FilterProductDto } from "./dtos/filter-product.dto";
+import { CommonService } from "src/commons/common.service";
 
 
 @Injectable()
@@ -14,13 +15,22 @@ export class ProductService {
 
 
     async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
-        const existingProduct = await this.productModel.findOne({ name: createProductDto.name });
+        const existingProduct = await this.productModel.findOne({ code: createProductDto.code });
 
         if (existingProduct) {
-            throw new ConflictException('Product with this name already exists');
+            throw new ConflictException('Product with this code already exists');
         }
 
-        const createdProduct = new this.productModel(createProductDto);
+        // Generar SKU único para cada variante
+        const variantsWithSku = createProductDto.variants.map(variant => ({
+            ...variant,
+            sku: CommonService.generateUniqueSku(createProductDto.name, variant.size, variant.color)
+        }));
+
+        const createdProduct = new this.productModel({ 
+            ...createProductDto, 
+            variants: variantsWithSku 
+        });
         return createdProduct.save();
     }
 

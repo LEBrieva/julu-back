@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
+import { RolesGuard } from './commons/guards/roles.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

@@ -1,6 +1,4 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from "@nestjs/common";
-import { JwtAuthGuard } from "src/commons/guards/jwt-auth.guard";
-import { RolesGuard } from "src/commons/guards/roles.guard";
 import { CreateProductResponse } from "./dtos/create-product.response";
 import { ProductMapper } from "./product.mapper";
 import { UserRole } from "src/user/user.enum";
@@ -12,7 +10,6 @@ import { CreateProductDto } from "./dtos/create-product.dto";
 
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductController{
 
     constructor( private readonly productService: ProductService){}

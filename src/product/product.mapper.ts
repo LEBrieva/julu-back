@@ -1,6 +1,6 @@
 import { PaginationMeta } from "src/commons/interfaces/pagination.interface";
-import { CreateProductResponse } from "./output/create-product.response";
-import { FilterProductResponse, FilterProductsPaginatedResponse } from "./output/filter-product.response";
+import { CreateProductResponse } from "./dtos/create-product.response";
+import { FilterProductResponse, FilterProductsPaginatedResponse } from "./dtos/filter-product.response";
 import { ProductDocument } from "./schemas/product.schema";
 
 export class ProductMapper {

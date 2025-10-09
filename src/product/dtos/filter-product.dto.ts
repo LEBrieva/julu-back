@@ -1,8 +1,8 @@
 import { IsOptional, IsEnum, IsString, IsArray } from 'class-validator';
 import { ProductColor, ProductSize, ProductStatus } from '../product.enum';
-import { FilterBaseInput } from 'src/commons/inputs/filter-base.interface';
+import { FilterBaseDto } from 'src/commons/inputs/filter-base.interface';
 
-export class FilterProductInput extends FilterBaseInput {
+export class FilterProductDto extends FilterBaseDto {
 
     @IsString()
     @IsOptional()

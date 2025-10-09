@@ -2,7 +2,7 @@ import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Min, ValidateNested } 
 import { ProductColor, ProductSize } from "../product.enum";
 import { Type } from "class-transformer";
 
-class CreateVariantInput{
+class CreateVariantDto{
     @IsEnum(ProductSize)
     size: ProductSize;
 
@@ -19,7 +19,7 @@ class CreateVariantInput{
 
 }
 
-export class CreateProductInput{
+export class CreateProductDto{
     @IsString()
     name: string;
 
@@ -33,8 +33,8 @@ export class CreateProductInput{
 
     @IsArray()
     @ValidateNested({ each: true })  // Valida cada elemento del array
-    @Type(() => CreateVariantInput)    // Especifica el tipo de clase para transformación
-    variants: CreateVariantInput[];
+    @Type(() => CreateVariantDto)    // Especifica el tipo de clase para transformación
+    variants: CreateVariantDto[];
 
     @IsArray()
     @IsString({ each: true })

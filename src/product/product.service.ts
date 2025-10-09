@@ -2,8 +2,8 @@ import { ConflictException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Product, ProductDocument } from "./schemas/product.schema";
 import { Model } from "mongoose";
-import { CreateProductInput } from "./inputs/create-product.input";
-import { FilterProductInput } from "./inputs/filter-product.input";
+import { CreateProductDto } from "./dtos/create-product.dto";
+import { FilterProductDto } from "./dtos/filter-product.dto";
 
 
 @Injectable()
@@ -13,19 +13,19 @@ export class ProductService {
   ) {}
 
 
-    async create(createProductInput: CreateProductInput): Promise<ProductDocument> {
-        const existingProduct = await this.productModel.findOne({ name: createProductInput.name });
+    async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
+        const existingProduct = await this.productModel.findOne({ name: createProductDto.name });
 
         if (existingProduct) {
             throw new ConflictException('Product with this name already exists');
         }
 
-        const createdProduct = new this.productModel(createProductInput);
+        const createdProduct = new this.productModel(createProductDto);
         return createdProduct.save();
     }
 
-    async findAll(filterInput: FilterProductInput) {
-        const { category, status, tags, size, color, search, page = 1, limit = 10 } = filterInput;
+    async findAll(filterDto: FilterProductDto) {
+        const { category, status, tags, size, color, search, page = 1, limit = 10 } = filterDto;
 
         const query: any = {};
         

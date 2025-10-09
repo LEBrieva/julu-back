@@ -1,7 +1,7 @@
 import { IsOptional, IsString, IsPositive, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class FilterBaseInput {
+export class FilterBaseDto {
 
     @IsOptional()
     @IsString()

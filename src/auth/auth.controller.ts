@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { RefreshTokenDto } from './dtos/refresh-token.dto';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
+import { Public } from 'src/commons/decorators/public.decorator';
 import type { LoginResponse, RefreshTokenResponse } from 'src/user/interfaces/user.interface';
 import type { JwtUser } from 'src/commons/interfaces/jwt.interface';
 
@@ -19,6 +20,7 @@ import type { JwtUser } from 'src/commons/interfaces/jwt.interface';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
@@ -31,6 +33,7 @@ export class AuthController {
     return this.authService.login(loginDto, userAgent, ipAddress);
   }
 
+  @Public()
   @Post('dashboard/login')
   @HttpCode(HttpStatus.OK)
   async dashboardLogin(
@@ -47,6 +50,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponse> {

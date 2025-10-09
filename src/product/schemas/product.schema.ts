@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ProductVariant } from "./product-variant.schema";
-import { ProductStatus } from "../product.enum";
-import { Document } from 'mongoose'; // 👈 ESTA LÍNEA FALTA
+import { ProductStatus, ProductCategory, ProductStyle } from "../product.enum";
+import { Document } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
@@ -29,8 +29,11 @@ export class Product {
     @Prop({ enum: ProductStatus, default: ProductStatus.ACTIVE })
     status: ProductStatus;
 
-    @Prop()
-    category?: string;
+    @Prop({ enum: ProductCategory, required: true })
+    category: ProductCategory;
+
+    @Prop({ enum: ProductStyle, required: true })
+    style: ProductStyle;
 
     @Prop([String])
     tags?: string[];
@@ -42,5 +45,6 @@ export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant)
 ProductSchema.index({ name: 'text', description: 'text' });
 ProductSchema.index({ status: 1 });
 ProductSchema.index({ category: 1 });
+ProductSchema.index({ style: 1 });
 ProductSchema.index({ 'variants.size': 1 });
 ProductSchema.index({ 'variants.color': 1 });

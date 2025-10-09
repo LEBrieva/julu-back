@@ -35,11 +35,12 @@ export class ProductService {
     }
 
     async findAll(filterDto: FilterProductDto) {
-        const { category, status, tags, size, color, search, page = 1, limit = 10 } = filterDto;
+        const { category, style, status, tags, size, color, search, page = 1, limit = 10 } = filterDto;
 
         const query: any = {};
         
         if (category) query.category = category;
+        if (style) query.style = style;
         if (status) query.status = status;
         if (tags) query.tags = { $in: tags };
         if (size) query['variants.size'] = size;

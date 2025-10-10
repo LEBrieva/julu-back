@@ -3,6 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Product, ProductDocument } from "./schemas/product.schema";
 import { Model } from "mongoose";
 import { CreateProductDto } from "./dtos/create-product.dto";
+import { UpdateProductDto } from "./dtos/update-product.dto";
 import { FilterProductDto } from "./dtos/filter-product.dto";
 import { CommonService } from "src/commons/common.service";
 
@@ -87,5 +88,49 @@ export class ProductService {
             throw new NotFoundException('Product not found');
         }
         return product;
+    }
+
+    async update(id: string, updateProductDto: UpdateProductDto): Promise<ProductDocument> {
+        // Verificar que el producto existe
+        const existingProduct = await this.productModel.findById(id);
+        if (!existingProduct) {
+            throw new NotFoundException('Product not found');
+        }
+
+        // Si se está actualizando el code, verificar que no exista otro producto con ese code
+        if (updateProductDto.code && updateProductDto.code !== existingProduct.code) {
+            const productWithCode = await this.productModel.findOne({ code: updateProductDto.code });
+            if (productWithCode) {
+                throw new ConflictException('Product with this code already exists');
+            }
+        }
+
+        // Si se están actualizando variantes, regenerar SKUs
+        if (updateProductDto.variants && updateProductDto.variants.length > 0) {
+            const productName = updateProductDto.name || existingProduct.name;
+            updateProductDto.variants = updateProductDto.variants.map(variant => {
+                // Solo generar SKU si se proporcionan size y color
+                if (variant.size && variant.color) {
+                    return {
+                        ...variant,
+                        sku: CommonService.generateUniqueSku(productName, variant.size, variant.color)
+                    };
+                }
+                return variant;
+            });
+        }
+
+        // Actualizar producto (solo campos enviados)
+        const updatedProduct = await this.productModel.findByIdAndUpdate(
+            id,
+            { $set: updateProductDto },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            throw new NotFoundException('Product not found');
+        }
+
+        return updatedProduct;
     }
 }

@@ -42,7 +42,6 @@ export class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant);
 
-ProductSchema.index({ code: 1 });
 ProductSchema.index({ name: 'text', description: 'text' });
 ProductSchema.index({ status: 1 });
 ProductSchema.index({ category: 1 });

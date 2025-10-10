@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ProductMapper } from "./product.mapper";
 import { UserRole } from "src/user/user.enum";
 import { Roles } from "src/commons/decorators/roles.decorator";
@@ -6,6 +6,7 @@ import { FilterProductsPaginatedResponse } from "./dtos/filter-product.response"
 import { ProductService } from "./product.service";
 import { FilterProductDto } from "./dtos/filter-product.dto";
 import { CreateProductDto } from "./dtos/create-product.dto";
+import { UpdateProductDto } from "./dtos/update-product.dto";
 import { ProductResponse } from "./dtos/product.response";
 
 
@@ -40,6 +41,17 @@ export class ProductController{
     @Roles(UserRole.ADMIN)
     async findByCode(@Query('code') code: string) {
         const product = await this.productService.findByCode(code);
+        return ProductMapper.toProductResponse(product);
+    }
+
+    @Patch(':id')
+    @Roles(UserRole.ADMIN)
+    @HttpCode(HttpStatus.OK)
+    async update(
+        @Param('id') id: string,
+        @Body() updateProductDto: UpdateProductDto
+    ): Promise<ProductResponse> {
+        const product = await this.productService.update(id, updateProductDto);
         return ProductMapper.toProductResponse(product);
     }
 }

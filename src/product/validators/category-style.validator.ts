@@ -1,5 +1,9 @@
-import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from "class-validator";
-import { CATEGORY_STYLE_MAP, ProductStyle } from "../product.enum";
+import {
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+} from 'class-validator';
+import { CATEGORY_STYLE_MAP, ProductStyle } from '../product.enum';
 
 /**
  * Validator que verifica que el style sea compatible con la category seleccionada.

@@ -33,13 +33,15 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
-    const { password, ...result } = user.toObject(); 
+    const { password, ...result } = user.toObject();
     return result;
   }
 
   @Get()
   @Roles(UserRole.ADMIN)
-  async findAll(@Query() filterDto: FilterUserDto): Promise<UsersPaginatedResponse> {
+  async findAll(
+    @Query() filterDto: FilterUserDto,
+  ): Promise<UsersPaginatedResponse> {
     const result = await this.usersService.findAll(filterDto);
     return UserMapper.toPaginatedResponse(result.users, result.pagination);
   }
@@ -52,7 +54,10 @@ export class UsersController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
-  async update(@Param() params: MongoIdDto, @Body() updateUserDto: UpdateUserDto) {
+  async update(
+    @Param() params: MongoIdDto,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(params.id, updateUserDto);
   }
 

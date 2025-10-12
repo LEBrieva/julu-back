@@ -10,5 +10,4 @@ export class FilterUserDto extends FilterBaseDto {
   @IsOptional()
   @IsEnum(UserStatus)
   status?: UserStatus;
-
 }

@@ -1,5 +1,5 @@
-import { Prop, Schema } from "@nestjs/mongoose";
-import { ProductSize, ProductColor } from "../product.enum";
+import { Prop, Schema } from '@nestjs/mongoose';
+import { ProductSize, ProductColor } from '../product.enum';
 
 @Schema({ _id: false })
 export class ProductVariant {
@@ -15,6 +15,6 @@ export class ProductVariant {
   @Prop({ required: true, min: 0 })
   price: number; // Puede variar por variante
 
-  @Prop() 
+  @Prop()
   sku?: string; // Código único para esta variante
 }

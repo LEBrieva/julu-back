@@ -13,4 +13,5 @@ export interface FilterProductResponse {
   tags?: string[];
 }
 
-export interface FilterProductsPaginatedResponse extends PaginatedResponse<FilterProductResponse> {}
+export interface FilterProductsPaginatedResponse
+  extends PaginatedResponse<FilterProductResponse> {}

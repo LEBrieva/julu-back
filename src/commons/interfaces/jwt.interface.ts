@@ -1,4 +1,4 @@
-import { UserRole } from "src/user/user.enum";
+import { UserRole } from 'src/user/user.enum';
 
 export interface JwtUser {
   userId: string;

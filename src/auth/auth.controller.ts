@@ -15,7 +15,10 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/login.dto';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
 import { Public } from 'src/commons/decorators/public.decorator';
-import type { LoginResponse, RefreshTokenResponse } from 'src/user/interfaces/user.interface';
+import type {
+  LoginResponse,
+  RefreshTokenResponse,
+} from 'src/user/interfaces/user.interface';
 import type { JwtUser } from 'src/commons/interfaces/jwt.interface';
 import { Throttle } from '@nestjs/throttler';
 
@@ -29,13 +32,22 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() loginDto: LoginDto,
-    @Request() req: { headers: Record<string, string>; ip: string; connection: { remoteAddress: string } },
-    @Res({ passthrough: true }) res: Response
+    @Request()
+    req: {
+      headers: Record<string, string>;
+      ip: string;
+      connection: { remoteAddress: string };
+    },
+    @Res({ passthrough: true }) res: Response,
   ): Promise<Omit<LoginResponse, 'refreshToken'>> {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.connection.remoteAddress;
 
-    const { accessToken, refreshToken, user } = await this.authService.login(loginDto, userAgent, ipAddress);
+    const { accessToken, refreshToken, user } = await this.authService.login(
+      loginDto,
+      userAgent,
+      ipAddress,
+    );
 
     // Guardar refresh token en httpOnly cookie
     res.cookie('refreshToken', refreshToken, {
@@ -56,8 +68,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async dashboardLogin(
     @Body() loginDto: LoginDto,
-    @Request() req: { headers: Record<string, string>; ip: string; connection: { remoteAddress: string } },
-    @Res({ passthrough: true }) res: Response
+    @Request()
+    req: {
+      headers: Record<string, string>;
+      ip: string;
+      connection: { remoteAddress: string };
+    },
+    @Res({ passthrough: true }) res: Response,
   ): Promise<Omit<LoginResponse, 'refreshToken'>> {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -85,7 +102,7 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
-    @Request() req: { cookies: Record<string, string> }
+    @Request() req: { cookies: Record<string, string> },
   ): Promise<RefreshTokenResponse> {
     // Solo leer de cookie (NO aceptar de body por seguridad)
     const refreshToken = req.cookies?.refreshToken;
@@ -102,7 +119,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(
     @Request() req: { cookies: Record<string, string> },
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     // Solo leer de cookie (NO aceptar de body por seguridad)
     const refreshToken = req.cookies?.refreshToken;

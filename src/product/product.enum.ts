@@ -38,24 +38,24 @@ export enum ProductStyle {
   REGULAR = 'regular',
   OVERSIZE = 'oversize',
   SLIM_FIT = 'slim_fit',
-  
+
   // Estilos para pantalones/jeans/shorts
   STRAIGHT = 'straight',
   SKINNY = 'skinny',
   RELAXED = 'relaxed',
   BOOTCUT = 'bootcut',
-  
+
   // Estilos para sudaderas/hoodies/chaquetas
   CLASSIC = 'classic',
   CROPPED = 'cropped',
   OVERSIZED = 'oversized',
-  
+
   // Estilos para calzado
   CASUAL = 'casual',
   FORMAL = 'formal',
   DEPORTIVO = 'deportivo',
   URBANO = 'urbano',
-  
+
   // Estilos para vestidos/faldas
   A_LINE = 'a_line',
   BODYCON = 'bodycon',
@@ -66,16 +66,51 @@ export enum ProductStyle {
 
 // Mapeo de categorías a estilos permitidos
 export const CATEGORY_STYLE_MAP: Record<ProductCategory, ProductStyle[]> = {
-  [ProductCategory.REMERA]: [ProductStyle.REGULAR, ProductStyle.OVERSIZE, ProductStyle.SLIM_FIT],
-  [ProductCategory.BLUSA]: [ProductStyle.REGULAR, ProductStyle.OVERSIZE, ProductStyle.SLIM_FIT],
-  
-  [ProductCategory.PANTALON]: [ProductStyle.STRAIGHT, ProductStyle.SKINNY, ProductStyle.RELAXED, ProductStyle.BOOTCUT],
-  [ProductCategory.SHORTS]: [ProductStyle.STRAIGHT, ProductStyle.SKINNY, ProductStyle.RELAXED],
-  
-  [ProductCategory.CHAQUETA]: [ProductStyle.CLASSIC, ProductStyle.CROPPED, ProductStyle.OVERSIZED],
-  
-  [ProductCategory.ZAPATILLAS]: [ProductStyle.CASUAL, ProductStyle.DEPORTIVO, ProductStyle.URBANO],
-  [ProductCategory.BOTAS]: [ProductStyle.CASUAL, ProductStyle.FORMAL, ProductStyle.URBANO],
-  
-  [ProductCategory.VESTIDO]: [ProductStyle.A_LINE, ProductStyle.BODYCON, ProductStyle.MAXI, ProductStyle.MINI, ProductStyle.MIDI],
+  [ProductCategory.REMERA]: [
+    ProductStyle.REGULAR,
+    ProductStyle.OVERSIZE,
+    ProductStyle.SLIM_FIT,
+  ],
+  [ProductCategory.BLUSA]: [
+    ProductStyle.REGULAR,
+    ProductStyle.OVERSIZE,
+    ProductStyle.SLIM_FIT,
+  ],
+
+  [ProductCategory.PANTALON]: [
+    ProductStyle.STRAIGHT,
+    ProductStyle.SKINNY,
+    ProductStyle.RELAXED,
+    ProductStyle.BOOTCUT,
+  ],
+  [ProductCategory.SHORTS]: [
+    ProductStyle.STRAIGHT,
+    ProductStyle.SKINNY,
+    ProductStyle.RELAXED,
+  ],
+
+  [ProductCategory.CHAQUETA]: [
+    ProductStyle.CLASSIC,
+    ProductStyle.CROPPED,
+    ProductStyle.OVERSIZED,
+  ],
+
+  [ProductCategory.ZAPATILLAS]: [
+    ProductStyle.CASUAL,
+    ProductStyle.DEPORTIVO,
+    ProductStyle.URBANO,
+  ],
+  [ProductCategory.BOTAS]: [
+    ProductStyle.CASUAL,
+    ProductStyle.FORMAL,
+    ProductStyle.URBANO,
+  ],
+
+  [ProductCategory.VESTIDO]: [
+    ProductStyle.A_LINE,
+    ProductStyle.BODYCON,
+    ProductStyle.MAXI,
+    ProductStyle.MINI,
+    ProductStyle.MIDI,
+  ],
 };

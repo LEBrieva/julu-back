@@ -11,11 +11,13 @@ async function bootstrap() {
   // Middleware para parsear cookies
   app.use(cookieParser());
 
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // CORS con soporte para cookies
   app.enableCors({

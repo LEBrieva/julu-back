@@ -1,46 +1,49 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ProductVariant } from "./product-variant.schema";
-import { ProductStatus, ProductCategory, ProductStyle } from "../product.enum";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ProductVariant } from './product-variant.schema';
+import { ProductStatus, ProductCategory, ProductStyle } from '../product.enum';
 import { Document } from 'mongoose';
 
 export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true })
-export class Product { 
+export class Product {
+  @Prop({ required: true, unique: true })
+  code: string;
 
-    @Prop({ required: true, unique: true })
-    code: string;
+  @Prop({ required: true })
+  name: string;
 
-    @Prop({ required: true })
-    name: string;
+  @Prop({ required: true, min: 0 })
+  basePrice: number;
 
-    @Prop({ required: true, min: 0 })
-    basePrice: number;
+  @Prop()
+  description?: string;
 
-    @Prop()
-    description?: string;
+  @Prop([String])
+  images?: string[];
 
-    @Prop([String])
-    images?: string[];
+  @Prop({ type: [ProductVariant], required: true })
+  variants: ProductVariant[];
 
-    @Prop({ type: [ProductVariant], required: true })
-    variants: ProductVariant[];
+  @Prop({ enum: ProductStatus, default: ProductStatus.ACTIVE })
+  status: ProductStatus;
 
-    @Prop({ enum: ProductStatus, default: ProductStatus.ACTIVE })
-    status: ProductStatus;
+  @Prop({ enum: ProductCategory, required: true })
+  category: ProductCategory;
 
-    @Prop({ enum: ProductCategory, required: true })
-    category: ProductCategory;
+  @Prop({ enum: ProductStyle, required: true })
+  style: ProductStyle;
 
-    @Prop({ enum: ProductStyle, required: true })
-    style: ProductStyle;
+  @Prop([String])
+  tags?: string[];
 
-    @Prop([String])
-    tags?: string[];
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
-export const ProductVariantSchema = SchemaFactory.createForClass(ProductVariant);
+export const ProductVariantSchema =
+  SchemaFactory.createForClass(ProductVariant);
 
 ProductSchema.index({ name: 'text', description: 'text' });
 ProductSchema.index({ status: 1 });

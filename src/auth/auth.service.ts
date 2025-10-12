@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -9,8 +13,13 @@ import { LoginDto } from './dtos/login.dto';
 import { RefreshToken, RefreshTokenDocument } from './auth.schema';
 import { UserDocument } from '../user/user.schema';
 import { UserRole } from '../user/user.enum';
-import { ValidatedUser, LoginResponse, JwtPayload, RefreshTokenResponse, PopulatedRefreshToken } from 'src/user/interfaces/user.interface';
-
+import {
+  ValidatedUser,
+  LoginResponse,
+  JwtPayload,
+  RefreshTokenResponse,
+  PopulatedRefreshToken,
+} from 'src/user/interfaces/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -21,19 +30,27 @@ export class AuthService {
     private refreshTokenModel: Model<RefreshTokenDocument>,
   ) {}
 
-  async validateUser(email: string, password: string): Promise<ValidatedUser | null> {
-    const user: UserDocument | null = await this.usersService.findByEmail(email);
-    
-    if (user && await bcrypt.compare(password, user.password)) {
+  async validateUser(
+    email: string,
+    password: string,
+  ): Promise<ValidatedUser | null> {
+    const user: UserDocument | null =
+      await this.usersService.findByEmail(email);
+
+    if (user && (await bcrypt.compare(password, user.password))) {
       const { password: _, ...result } = user.toObject();
       return result as ValidatedUser;
     }
     return null;
   }
 
-  async login(loginDto: LoginDto, userAgent?: string, ipAddress?: string): Promise<LoginResponse> {
+  async login(
+    loginDto: LoginDto,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<LoginResponse> {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    
+
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -44,7 +61,9 @@ export class AuthService {
 
     // Para dashboard, verificar que tenga permisos administrativos
     if (loginDto.isDashboard && !['admin', 'manager'].includes(user.role)) {
-      throw new ForbiddenException('Insufficient permissions for dashboard access');
+      throw new ForbiddenException(
+        'Insufficient permissions for dashboard access',
+      );
     }
 
     const payload: JwtPayload = {
@@ -79,7 +98,9 @@ export class AuthService {
     };
   }
 
-  async refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<RefreshTokenResponse> {
     const tokenDoc = await this.refreshTokenModel
       .findOne({ token: refreshToken, isRevoked: false })
       .populate('userId')
@@ -113,10 +134,7 @@ export class AuthService {
   }
 
   async logoutAll(userId: string): Promise<void> {
-    await this.refreshTokenModel.updateMany(
-      { userId },
-      { isRevoked: true },
-    );
+    await this.refreshTokenModel.updateMany({ userId }, { isRevoked: true });
   }
 
   private async generateRefreshToken(
@@ -139,15 +157,8 @@ export class AuthService {
 
   private getUserPermissions(role: UserRole): string[] {
     const permissions: Record<UserRole, string[]> = {
-      [UserRole.ADMIN]: [
-        'users:read',
-        'users:write',
-        'users:delete',
-      ],
-      [UserRole.USER]: [
-        'profile:read', 
-        'profile:write'
-      ],
+      [UserRole.ADMIN]: ['users:read', 'users:write', 'users:delete'],
+      [UserRole.USER]: ['profile:read', 'profile:write'],
     };
 
     return permissions[role] || permissions[UserRole.USER];

@@ -6,6 +6,7 @@ import { CreateProductDto } from "./dtos/create-product.dto";
 import { UpdateProductDto } from "./dtos/update-product.dto";
 import { FilterProductDto } from "./dtos/filter-product.dto";
 import { CommonService } from "src/commons/common.service";
+import { ProductStatus } from "./product.enum";
 
 
 @Injectable()
@@ -132,5 +133,20 @@ export class ProductService {
         }
 
         return updatedProduct;
+    }
+
+    async deactivate(id: string): Promise<ProductDocument> {
+        const product = await this.productModel.findById(id);
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        if (product.status === ProductStatus.INACTIVE) {
+            throw new ConflictException('Product is already inactive');
+        }
+
+        product.status = ProductStatus.INACTIVE;
+        return product.save();
     }
 }

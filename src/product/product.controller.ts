@@ -54,4 +54,12 @@ export class ProductController{
         const product = await this.productService.update(id, updateProductDto);
         return ProductMapper.toProductResponse(product);
     }
+
+    @Patch(':id/deactivate')
+    @Roles(UserRole.ADMIN)
+    @HttpCode(HttpStatus.OK)
+    async deactivate(@Param('id') id: string): Promise<ProductResponse> {
+        const product = await this.productService.deactivate(id);
+        return ProductMapper.toProductResponse(product);
+    }
 }

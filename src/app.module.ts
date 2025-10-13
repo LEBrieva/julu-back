@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { UsersModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
+import { AddressModule } from './address/address.module';
+import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
 import { RolesGuard } from './commons/guards/roles.guard';
@@ -38,6 +41,9 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     UsersModule,
     AuthModule,
     ProductModule,
+    AddressModule,
+    CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [

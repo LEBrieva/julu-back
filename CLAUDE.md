@@ -59,6 +59,9 @@ The application follows NestJS modular architecture with clear domain separation
 - **auth/** - Authentication & authorization (login, refresh tokens, JWT strategy)
 - **user/** - User management (CRUD operations, role/status handling)
 - **product/** - Product catalog (products with variants, categories, styles)
+- **address/** - Shipping addresses management (CRUD, default address handling)
+- **cart/** - Shopping cart functionality (add/update/remove items, stock validation)
+- **order/** - Order processing (create from cart, status tracking, order history)
 - **commons/** - Shared utilities (guards, decorators, DTOs, interfaces, strategies)
 
 ### Authentication Flow
@@ -109,6 +112,28 @@ Currently implements **role-based authorization** with plans for permission-base
 - Expiration timestamp, revocation flag
 - UserAgent and IP tracking for security audit
 - TTL index for automatic cleanup
+
+**Address Schema** (`src/address/address.schema.ts`):
+- userId reference (indexed)
+- fullName, street, city, state, zipCode, country, phone
+- isDefault flag (only one per user)
+- Indexed on: userId + isDefault
+
+**Cart Schema** (`src/cart/cart.schema.ts`):
+- userId reference (unique - one cart per user)
+- items array with embedded CartItem schema
+- CartItem includes: productId, variantSKU, quantity, priceAtAdd, product snapshot (name, image, size, color)
+- Totals calculated on-the-fly in mapper
+
+**Order Schema** (`src/order/order.schema.ts`):
+- orderNumber (unique, auto-generated: ORD-YYYY-NNNNN)
+- userId reference (indexed)
+- items array with embedded OrderItem schema (product snapshot at purchase time)
+- shippingAddress (embedded snapshot of address)
+- subtotal, shippingCost, total
+- status: pending, paid, processing, shipped, delivered, cancelled
+- paymentMethod and paymentStatus
+- Indexed on: userId + createdAt, orderNumber, status, paymentStatus
 
 ### DTOs & Validation
 
@@ -170,6 +195,18 @@ PORT=3000
 - Global authentication guard requires explicit `@Public()` decorator to bypass
 - CORS is enabled globally - configure origins for production
 
+### E-commerce Flow
+
+The application implements a complete e-commerce purchase flow:
+
+1. **Browse Catalog**: Public endpoints show active products (`GET /products/catalog`)
+2. **Add to Cart**: Authenticated users add items to cart with stock validation (`POST /cart/items`)
+3. **Manage Cart**: Users can update quantities, remove items, or clear cart
+4. **Shipping Address**: Users manage delivery addresses, one marked as default
+5. **Create Order**: Order created from cart, decrements stock, clears cart (`POST /orders`)
+6. **Order Management**: Users track orders, admins update status, users can cancel pending orders
+7. **Stock Control**: Stock automatically managed during order creation/cancellation
+
 ### Product Variants
 
 Products use an embedded variant pattern (not separate collection):
@@ -177,6 +214,28 @@ Products use an embedded variant pattern (not separate collection):
 - Each variant tracks its own stock level and can have price modifiers
 - SKU generation should be unique per variant
 - Stock updates operate on variant level, not product level
+
+### Cart & Order Workflow
+
+**Cart Behavior:**
+- One cart per user (singleton pattern)
+- Items include snapshot of product data to avoid extra queries
+- Stock validated on add/update operations
+- Endpoint to validate entire cart before checkout
+
+**Order Creation:**
+- Validates cart is not empty
+- Validates stock availability for all items
+- Retrieves shipping address
+- Creates order with product/address snapshots (historical data)
+- Decrements stock for all items
+- Clears user's cart
+- Generates unique order number (ORD-YYYY-NNNNN)
+
+**Order Cancellation:**
+- Only pending orders can be cancelled by users
+- Stock is returned to products automatically
+- Order status changed to cancelled (not deleted)
 
 ### Validation & Transformation
 

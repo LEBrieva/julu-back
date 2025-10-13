@@ -39,6 +39,9 @@ pnpm run test:e2e
 
 # Generate coverage report
 pnpm run test:cov
+
+# Debug tests
+pnpm run test:debug
 ```
 
 ### Code Quality
@@ -66,18 +69,40 @@ The application follows NestJS modular architecture with clear domain separation
 
 ### Authentication Flow
 
-The application implements an **Access Token + Refresh Token** strategy:
+The application implements an **Access Token + Refresh Token** strategy with HttpOnly cookies:
 
 1. **Access Tokens**: JWT tokens with 60-minute expiration used for API authentication
+   - Stored in frontend (localStorage)
+   - Sent via `Authorization: Bearer <token>` header
+   - Payload includes: userId (sub), email, role, permissions, isDashboard
+
 2. **Refresh Tokens**: Randomly generated tokens stored in MongoDB with 7-day expiration
+   - Transmitted via HttpOnly cookies (NOT in response body)
+   - Cookie settings: `HttpOnly; Secure (production); SameSite=Strict; Path=/auth`
+   - Cannot be accessed by JavaScript (XSS protection)
+   - Frontend must use `credentials: 'include'` in fetch/axios
+
 3. **Token Rotation**: Clients use refresh tokens to obtain new access tokens without re-authentication
+   - `/auth/refresh` endpoint reads token from cookie (no body required)
+   - Returns new access token in response body
+
 4. **Revocation Support**: Refresh tokens can be revoked individually or globally per user
+   - `/auth/logout` revokes current token and clears cookie
+   - `/auth/logout-all` revokes all user's tokens (all devices)
+   - Validation checks `isRevoked: false` in database
+
+**How req.user is populated:**
+- JwtAuthGuard extracts JWT from `Authorization` header
+- JwtStrategy.validate() decodes payload and returns JwtUser object
+- NestJS automatically assigns result to `req.user`
+- Controllers access via `@Req() req: any` → `req.user.userId`
 
 Key implementation details:
 - JWT secret configured via `JWT_SECRET` environment variable
 - Refresh token schema includes metadata (userAgent, ipAddress, isRevoked flag)
 - TTL index on refresh tokens for automatic cleanup after expiration
-- See `documentation/refresh-token-strategy.md` for detailed strategy documentation
+- `/auth/refresh` and `/auth/logout` use `@Public()` decorator (access token may be expired)
+- See `documentation/refresh-token-strategy.md` and `documentation/httponly-cookies-and-rate-limiting.md`
 
 ### Authorization System
 
@@ -183,17 +208,33 @@ Required variables in `.env`:
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your-secret-key
 PORT=3000
+NODE_ENV=development           # Set to 'production' for HTTPS-only cookies
+FRONTEND_URL=http://localhost:5173  # Frontend URL for CORS configuration
 ```
 
 ## Important Notes
 
 ### Security Considerations
 
-- Passwords are hashed using bcrypt before storage
-- JWT tokens are stateless but short-lived (60 minutes)
-- Refresh tokens are stored in database for revocation capability
-- Global authentication guard requires explicit `@Public()` decorator to bypass
-- CORS is enabled globally - configure origins for production
+- **Password Hashing**: Passwords are hashed using bcrypt before storage
+- **JWT Tokens**: Stateless access tokens with 60-minute expiration
+- **Refresh Tokens**:
+  - Stored in MongoDB with revocation support
+  - Transmitted via HttpOnly cookies (protection against XSS attacks)
+  - Cannot be accessed by JavaScript (document.cookie won't reveal them)
+  - SameSite=Strict prevents CSRF attacks
+  - 7-day expiration with TTL index for automatic cleanup
+- **Rate Limiting**: Implemented with @nestjs/throttler
+  - Global: 100 requests/minute
+  - Auth endpoints: 5 requests/minute (brute force protection)
+  - Refresh endpoint: 10 requests/minute
+  - Returns 429 status with X-RateLimit-* headers when exceeded
+- **Authentication Guards**:
+  - Global JwtAuthGuard and RolesGuard applied to all endpoints
+  - Use `@Public()` decorator to bypass authentication
+  - ThrottlerGuard applied globally for rate limiting
+- **CORS**: Enabled globally - configure `FRONTEND_URL` for production
+- **Frontend Integration**: All auth endpoints require `credentials: 'include'` in fetch/axios for cookie transmission
 
 ### E-commerce Flow
 
@@ -209,26 +250,48 @@ The application implements a complete e-commerce purchase flow:
 
 ### Product Variants
 
-Products use an embedded variant pattern (not separate collection):
+Products use an **embedded variant pattern** (not separate collection):
 - Each product has an array of variants (size/color combinations)
 - Each variant tracks its own stock level and can have price modifiers
 - SKU generation should be unique per variant
 - Stock updates operate on variant level, not product level
 
+**Embedded vs Referenced Documents:**
+- **Embedded** (Variants in Product): One query, atomic updates, good for data always used together
+- **Referenced** (User ↔ Orders): Flexible queries, no data duplication, but requires multiple queries
+- This project uses embedded for variants, referenced for user relationships
+
 ### Cart & Order Workflow
 
-**Cart Behavior:**
+**Cart vs Order - Critical Distinction:**
+
+**Cart (Temporary, Mutable):**
 - One cart per user (singleton pattern)
+- Items can be freely added/removed/updated
+- Stock NOT decremented (no commitment yet)
 - Items include snapshot of product data to avoid extra queries
 - Stock validated on add/update operations
+- Totals calculated on-the-fly
 - Endpoint to validate entire cart before checkout
 
-**Order Creation:**
+**Order (Permanent, Immutable):**
+- Multiple orders per user (historical record)
+- Once created, only status can change
+- Stock IS decremented at creation (commitment made)
+- Contains complete snapshots (products, prices, shipping address)
+- Snapshots ensure historical accuracy even if data changes later
+- One order per checkout (cart is cleared after order creation)
+
+**Order Creation (Critical Snapshot Pattern):**
 - Validates cart is not empty
 - Validates stock availability for all items
 - Retrieves shipping address
-- Creates order with product/address snapshots (historical data)
-- Decrements stock for all items
+- **Creates order with product/address snapshots** (historical immutable data)
+  - Snapshots preserve exact data at time of purchase (prices, product names, addresses)
+  - Prevents historical corruption if product changes or user updates address
+  - Includes: productName, productImage, variantSize, variantColor, price, full address
+  - Essential for auditing, invoicing, and legal compliance
+- Decrements stock for all items (atomic operation)
 - Clears user's cart
 - Generates unique order number (ORD-YYYY-NNNNN)
 
@@ -274,3 +337,25 @@ All incoming requests are:
 - Root directory for tests is `src/` (unit tests co-located with source)
 - E2e tests have separate config in `test/jest-e2e.json`
 - Coverage directory: `coverage/`
+
+### Manual Testing with curl
+
+```bash
+# Login and save cookie
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"password123"}' \
+  -c cookies.txt -v
+
+# Refresh using cookie (no body required)
+curl -X POST http://localhost:3000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -b cookies.txt
+
+# Test rate limiting (run 6 times - should get 429 on 6th)
+for i in {1..6}; do
+  curl -X POST http://localhost:3000/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"test@example.com","password":"wrong"}'
+done
+```

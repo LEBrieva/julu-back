@@ -69,7 +69,13 @@ export class ProductService {
     if (tags) query.tags = { $in: tags };
     if (size) query['variants.size'] = size;
     if (color) query['variants.color'] = color;
-    if (search) query.$text = { $search: search };
+    if (search) {
+      query.$or = [
+        { code: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const pageNum = page;
     const limitNum = limit;
@@ -85,7 +91,7 @@ export class ProductService {
       this.productModel.countDocuments(query),
     ]);
 
-    return {
+      return {
       products,
       pagination: {
         total,
@@ -117,7 +123,13 @@ export class ProductService {
     if (tags) query.tags = { $in: tags };
     if (size) query['variants.size'] = size;
     if (color) query['variants.color'] = color;
-    if (search) query.$text = { $search: search };
+    if (search) {
+      query.$or = [
+        { code: { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const pageNum = page;
     const limitNum = limit;

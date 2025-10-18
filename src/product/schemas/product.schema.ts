@@ -45,9 +45,13 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
 export const ProductVariantSchema =
   SchemaFactory.createForClass(ProductVariant);
 
-ProductSchema.index({ name: 'text', description: 'text' });
+// Índices para filtros
 ProductSchema.index({ status: 1 });
 ProductSchema.index({ category: 1 });
 ProductSchema.index({ style: 1 });
 ProductSchema.index({ 'variants.size': 1 });
 ProductSchema.index({ 'variants.color': 1 });
+
+// Índices para búsqueda y queries comunes
+ProductSchema.index({ code: 1 });
+ProductSchema.index({ name: 1 });

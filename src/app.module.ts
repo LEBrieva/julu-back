@@ -9,6 +9,7 @@ import { ProductModule } from './product/product.module';
 import { AddressModule } from './address/address.module';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
+import { SeedModule } from './seed/seed.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
 import { RolesGuard } from './commons/guards/roles.guard';
@@ -44,6 +45,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     AddressModule,
     CartModule,
     OrderModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [

@@ -127,7 +127,15 @@ export class OrderService {
   }
 
   async findAll(userId: string, isAdmin: boolean, filterDto: FilterOrderDto) {
-    const { status, paymentStatus, page = 1, limit = 10 } = filterDto;
+    const {
+      status,
+      paymentStatus,
+      page = 1,
+      limit = 10,
+      search,
+      dateFrom,
+      dateTo,
+    } = filterDto;
 
     const query: any = {};
 
@@ -136,8 +144,37 @@ export class OrderService {
       query.userId = new Types.ObjectId(userId);
     }
 
-    if (status) query.status = status;
-    if (paymentStatus) query.paymentStatus = paymentStatus;
+    // Filtro por búsqueda (orderNumber)
+    if (search) {
+      query.orderNumber = { $regex: search, $options: 'i' };
+    }
+
+    // Filtro por estado de orden
+    if (status) {
+      query.status = status;
+    }
+
+    // Filtro por estado de pago
+    if (paymentStatus) {
+      query.paymentStatus = paymentStatus;
+    }
+
+    // Filtro por rango de fechas
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+
+      if (dateFrom) {
+        // Desde el inicio del día (00:00:00)
+        query.createdAt.$gte = new Date(dateFrom);
+      }
+
+      if (dateTo) {
+        // Hasta el final del día (23:59:59)
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = endDate;
+      }
+    }
 
     const skip = (page - 1) * limit;
 

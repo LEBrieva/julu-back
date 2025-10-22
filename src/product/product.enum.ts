@@ -1,10 +1,8 @@
 export enum ProductSize {
-  XS = 'xs',
-  S = 's',
-  M = 'm',
-  G = 'g',
-  GG = 'gg',
-  XXL = 'xxl',
+  P = 'P',
+  M = 'M',
+  G = 'G',
+  GG = 'GG',
 }
 
 export enum ProductColor {

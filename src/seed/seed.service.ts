@@ -129,22 +129,22 @@ export class SeedService {
         tags: ['básica', 'casual', 'algodón'],
         variants: [
           {
-            sku: 'REM-OVS-001-S-BLK',
-            size: 's',
+            sku: 'REM-OVS-001-GG-BLK',
+            size: 'GG',
             color: 'black',
             stock: 50,
             price: 89.9,
           },
           {
             sku: 'REM-OVS-001-M-BLK',
-            size: 'm',
+            size: 'M',
             color: 'black',
             stock: 75,
             price: 89.9,
           },
           {
             sku: 'REM-OVS-001-G-BLK',
-            size: 'g',
+            size: 'G',
             color: 'black',
             stock: 60,
             price: 89.9,
@@ -163,15 +163,15 @@ export class SeedService {
         tags: ['básica', 'blanca'],
         variants: [
           {
-            sku: 'REM-REG-002-S-WHT',
-            size: 's',
+            sku: 'REM-REG-002-GG-WHT',
+            size: 'GG',
             color: 'white',
             stock: 40,
             price: 69.9,
           },
           {
             sku: 'REM-REG-002-M-WHT',
-            size: 'm',
+            size: 'M',
             color: 'white',
             stock: 55,
             price: 69.9,
@@ -192,14 +192,14 @@ export class SeedService {
         variants: [
           {
             sku: 'CHA-CLA-001-M-GRY',
-            size: 'm',
+            size: 'M',
             color: 'gray',
             stock: 30,
             price: 189.9,
           },
           {
             sku: 'CHA-CLA-001-G-GRY',
-            size: 'g',
+            size: 'G',
             color: 'gray',
             stock: 25,
             price: 189.9,
@@ -218,15 +218,15 @@ export class SeedService {
         tags: ['minimalista', 'sin capucha'],
         variants: [
           {
-            sku: 'CHA-CRO-002-S-BLK',
-            size: 's',
+            sku: 'CHA-CRO-002-GG-BLK',
+            size: 'GG',
             color: 'black',
             stock: 20,
             price: 169.9,
           },
           {
             sku: 'CHA-CRO-002-M-BLK',
-            size: 'm',
+            size: 'M',
             color: 'black',
             stock: 35,
             price: 169.9,
@@ -247,14 +247,14 @@ export class SeedService {
         variants: [
           {
             sku: 'PAN-STR-001-M-BLU',
-            size: 'm',
+            size: 'M',
             color: 'blue',
             stock: 25,
             price: 159.9,
           },
           {
             sku: 'PAN-STR-001-G-BLU',
-            size: 'g',
+            size: 'G',
             color: 'blue',
             stock: 30,
             price: 159.9,

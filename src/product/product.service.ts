@@ -13,11 +13,13 @@ import { FilterProductDto } from './dtos/filter-product.dto';
 import { AddVariantDto, UpdateSingleVariantDto } from './dtos/variant.dto';
 import { CommonService } from 'src/commons/common.service';
 import { ProductStatus } from './product.enum';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<ProductDocument>,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<ProductDocument> {
@@ -461,6 +463,87 @@ export class ProductService {
     }
 
     product.variants.splice(variantIndex, 1);
+    return product.save();
+  }
+
+  /**
+   * Sube imágenes a Cloudinary y actualiza el producto
+   * @param productId - ID del producto
+   * @param files - Archivos de Multer
+   * @returns Producto actualizado
+   */
+  async uploadImages(
+    productId: string,
+    files: Express.Multer.File[],
+  ): Promise<ProductDocument> {
+    // Validar que se enviaron archivos
+    if (!files || files.length === 0) {
+      throw new BadRequestException('Debes enviar al menos una imagen');
+    }
+
+    // Obtener producto
+    const product = await this.findById(productId);
+    const currentImagesCount = product.images?.length || 0;
+
+    // Validar límite total de 5 imágenes
+    if (currentImagesCount + files.length > 5) {
+      throw new BadRequestException(
+        `El producto ya tiene ${currentImagesCount} imágenes. Máximo permitido: 5. Puedes subir ${5 - currentImagesCount} más.`,
+      );
+    }
+
+    // Subir cada imagen a Cloudinary
+    const uploadPromises = files.map((file) =>
+      this.cloudinaryService.uploadImage(
+        file,
+        `ecommerce/products/${productId}`,
+      ),
+    );
+
+    const imageUrls = await Promise.all(uploadPromises);
+
+    // Actualizar producto con nuevas URLs
+    product.images = [...(product.images || []), ...imageUrls];
+    return product.save();
+  }
+
+  /**
+   * Elimina una imagen del producto (Cloudinary + MongoDB)
+   * @param productId - ID del producto
+   * @param imageIndex - Índice de la imagen en el array (0-4)
+   * @returns Producto actualizado
+   */
+  async deleteImage(
+    productId: string,
+    imageIndex: number,
+  ): Promise<ProductDocument> {
+    // Validar que el índice sea válido
+    if (imageIndex < 0) {
+      throw new BadRequestException('Índice de imagen inválido');
+    }
+
+    // Obtener producto
+    const product = await this.findById(productId);
+
+    // Validar que el producto tiene imágenes
+    if (!product.images || product.images.length === 0) {
+      throw new BadRequestException('El producto no tiene imágenes');
+    }
+
+    // Validar que el índice existe
+    if (imageIndex >= product.images.length) {
+      throw new BadRequestException(
+        `Índice ${imageIndex} fuera de rango. El producto tiene ${product.images.length} imágenes`,
+      );
+    }
+
+    // Extraer public_id de la URL y eliminar de Cloudinary
+    const imageUrl = product.images[imageIndex];
+    const publicId = this.cloudinaryService.extractPublicId(imageUrl);
+    await this.cloudinaryService.deleteImage(publicId);
+
+    // Eliminar URL del array
+    product.images.splice(imageIndex, 1);
     return product.save();
   }
 }

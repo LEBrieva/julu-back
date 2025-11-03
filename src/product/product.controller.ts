@@ -9,7 +9,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFiles,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductMapper } from './product.mapper';
 import { UserRole } from 'src/user/user.enum';
 import { Roles } from 'src/commons/decorators/roles.decorator';
@@ -21,6 +25,7 @@ import { CreateProductDto } from './dtos/create-product.dto';
 import { UpdateProductDto } from './dtos/update-product.dto';
 import { AddVariantDto, UpdateSingleVariantDto } from './dtos/variant.dto';
 import { ProductResponse } from './dtos/product.response';
+import { UploadImagesResponseDto } from './dto/upload-images.dto';
 
 @Controller('products')
 export class ProductController {
@@ -185,6 +190,68 @@ export class ProductController {
     @Param('sku') sku: string,
   ): Promise<ProductResponse> {
     const product = await this.productService.removeVariant(id, sku);
+    return ProductMapper.toProductResponse(product);
+  }
+
+  /**
+   * Upload de imágenes a Cloudinary
+   * POST /products/:id/images
+   */
+  @Post(':id/images')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(
+    FilesInterceptor('images', 5, {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (JPEG, PNG, WebP)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async uploadImages(
+    @Param('id') productId: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<UploadImagesResponseDto> {
+    const product = await this.productService.uploadImages(productId, files);
+
+    return {
+      id: product.id,
+      images: product.images || [],
+      message: `${files.length} imagen(es) subida(s) exitosamente`,
+    };
+  }
+
+  /**
+   * Eliminar imagen de un producto
+   * DELETE /products/:id/images/:index
+   */
+  @Delete(':id/images/:index')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async deleteImage(
+    @Param('id') productId: string,
+    @Param('index') index: string,
+  ): Promise<ProductResponse> {
+    const imageIndex = parseInt(index, 10);
+
+    if (isNaN(imageIndex)) {
+      throw new BadRequestException('Índice de imagen inválido');
+    }
+
+    const product = await this.productService.deleteImage(
+      productId,
+      imageIndex,
+    );
     return ProductMapper.toProductResponse(product);
   }
 }

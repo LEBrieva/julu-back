@@ -10,6 +10,7 @@ import { AddressModule } from './address/address.module';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
 import { SeedModule } from './seed/seed.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
 import { RolesGuard } from './commons/guards/roles.guard';
@@ -46,6 +47,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     CartModule,
     OrderModule,
     SeedModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [

@@ -4,9 +4,15 @@ import { AppModule } from './app.module';
 import { JwtAuthGuard } from './commons/guards/jwt-auth.guard';
 import { RolesGuard } from './commons/guards/roles.guard';
 import cookieParser from 'cookie-parser';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Configurar límites de payload para body parser (JSON y form data)
+  // Nota: Multer maneja archivos multipart/form-data por separado con su propio límite
+  app.use(json({ limit: '2mb' }));
+  app.use(urlencoded({ extended: true, limit: '2mb' }));
 
   // Middleware para parsear cookies
   app.use(cookieParser());

@@ -15,6 +15,7 @@ export class ProductMapper {
       description: product.description,
       basePrice: product.basePrice,
       images: product.images,
+      featuredImageIndex: product.featuredImageIndex,
       variants: product.variants.map((v) => ({
         sku: v.sku || '',
         size: v.size,

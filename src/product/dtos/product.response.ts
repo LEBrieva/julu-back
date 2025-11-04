@@ -15,6 +15,7 @@ export interface ProductResponse {
   description?: string;
   basePrice: number;
   images?: string[];
+  featuredImageIndex?: number;
   variants: VariantResponse[];
   status: ProductStatus;
   category: ProductCategory;

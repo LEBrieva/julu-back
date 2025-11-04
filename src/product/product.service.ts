@@ -546,4 +546,39 @@ export class ProductService {
     product.images.splice(imageIndex, 1);
     return product.save();
   }
+
+  /**
+   * Establece la imagen destacada/portada del producto
+   * @param productId - ID del producto
+   * @param imageIndex - Índice de la imagen a establecer como destacada (0-4)
+   * @returns Producto actualizado
+   */
+  async setFeaturedImage(
+    productId: string,
+    imageIndex: number,
+  ): Promise<ProductDocument> {
+    // Validar que el índice sea válido
+    if (imageIndex < 0) {
+      throw new BadRequestException('Índice de imagen inválido');
+    }
+
+    // Obtener producto
+    const product = await this.findById(productId);
+
+    // Validar que el producto tiene imágenes
+    if (!product.images || product.images.length === 0) {
+      throw new BadRequestException('El producto no tiene imágenes');
+    }
+
+    // Validar que el índice existe
+    if (imageIndex >= product.images.length) {
+      throw new BadRequestException(
+        `Índice ${imageIndex} fuera de rango. El producto tiene ${product.images.length} imágenes`,
+      );
+    }
+
+    // Actualizar índice de imagen destacada
+    product.featuredImageIndex = imageIndex;
+    return product.save();
+  }
 }

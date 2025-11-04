@@ -22,6 +22,9 @@ export class Product {
   @Prop([String])
   images?: string[];
 
+  @Prop({ type: Number, default: 0 })
+  featuredImageIndex?: number;
+
   @Prop({ type: [ProductVariant], required: true })
   variants: ProductVariant[];
 

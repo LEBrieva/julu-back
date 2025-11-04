@@ -83,4 +83,9 @@ export class UpdateProductDto {
   @IsArray()
   @IsString({ each: true })
   images?: string[];
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  featuredImageIndex?: number;
 }

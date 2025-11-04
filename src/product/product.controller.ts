@@ -26,6 +26,7 @@ import { UpdateProductDto } from './dtos/update-product.dto';
 import { AddVariantDto, UpdateSingleVariantDto } from './dtos/variant.dto';
 import { ProductResponse } from './dtos/product.response';
 import { UploadImagesResponseDto } from './dto/upload-images.dto';
+import { SetFeaturedImageDto } from './dto/set-featured-image.dto';
 
 @Controller('products')
 export class ProductController {
@@ -251,6 +252,24 @@ export class ProductController {
     const product = await this.productService.deleteImage(
       productId,
       imageIndex,
+    );
+    return ProductMapper.toProductResponse(product);
+  }
+
+  /**
+   * Establecer imagen destacada/portada de un producto
+   * PATCH /products/:id/featured-image
+   */
+  @Patch(':id/featured-image')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async setFeaturedImage(
+    @Param('id') productId: string,
+    @Body() setFeaturedImageDto: SetFeaturedImageDto,
+  ): Promise<ProductResponse> {
+    const product = await this.productService.setFeaturedImage(
+      productId,
+      setFeaturedImageDto.index,
     );
     return ProductMapper.toProductResponse(product);
   }

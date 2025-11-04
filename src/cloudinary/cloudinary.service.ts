@@ -22,6 +22,10 @@ export class CloudinaryService {
             {
               quality: 'auto', // Compresión inteligente
               fetch_format: 'auto', // Formato automático (WebP si es soportado)
+              angle: 'exif', // Corregir orientación según metadatos EXIF (elimina bordes negros)
+              crop: 'limit', // No aumentar el tamaño original
+              width: 2000, // Ancho máximo para optimizar
+              height: 2000, // Alto máximo para optimizar
             },
           ],
           // Opciones adicionales

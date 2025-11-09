@@ -33,8 +33,7 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
-    const { password, ...result } = user.toObject();
-    return result;
+    return UserMapper.toResponse(user);
   }
 
   @Get()
@@ -48,8 +47,9 @@ export class UsersController {
 
   @Get(':id')
   @Roles(UserRole.ADMIN)
-  findOne(@Param() params: MongoIdDto) {
-    return this.usersService.findOne(params.id);
+  async findOne(@Param() params: MongoIdDto) {
+    const user = await this.usersService.findOne(params.id);
+    return UserMapper.toResponse(user);
   }
 
   @Patch(':id')
@@ -58,7 +58,8 @@ export class UsersController {
     @Param() params: MongoIdDto,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(params.id, updateUserDto);
+    const user = await this.usersService.update(params.id, updateUserDto);
+    return UserMapper.toResponse(user);
   }
 
   @Delete(':id')

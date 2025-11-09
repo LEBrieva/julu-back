@@ -11,10 +11,14 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { FilterUserDto } from './dtos/filter-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { User, UserDocument } from './user.schema';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     const existingUser = await this.userModel.findOne({
@@ -137,6 +141,47 @@ export class UsersService {
     if (!result) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  /**
+   * Actualiza el avatar del usuario
+   * - Sube nueva imagen a Cloudinary
+   * - Elimina avatar anterior si existe
+   * - Actualiza campo avatar del usuario
+   */
+  async updateAvatar(
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<UserDocument> {
+    // Validar que el usuario existe
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Si tiene avatar anterior, eliminarlo de Cloudinary
+    if (user.avatar) {
+      try {
+        const publicId = this.cloudinaryService.extractPublicId(user.avatar);
+        await this.cloudinaryService.deleteImage(publicId);
+      } catch (error) {
+        // Continuar aunque falle la eliminación (puede que la imagen ya no exista en Cloudinary)
+        console.warn(
+          `No se pudo eliminar avatar anterior de Cloudinary:`,
+          error,
+        );
+      }
+    }
+
+    // Subir nueva imagen a Cloudinary
+    const avatarUrl = await this.cloudinaryService.uploadImage(
+      file,
+      `ecommerce/users/${userId}`,
+    );
+
+    // Actualizar usuario con nueva URL
+    user.avatar = avatarUrl;
+    return user.save();
   }
 
   async updateLastLogin(id: string): Promise<void> {

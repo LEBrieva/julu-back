@@ -10,7 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { FilterUserDto } from './dtos/filter-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -59,6 +63,42 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
   ) {
     const user = await this.usersService.update(params.id, updateUserDto);
+    return UserMapper.toResponse(user);
+  }
+
+  /**
+   * Upload de avatar a Cloudinary
+   * PATCH /users/:id/avatar
+   */
+  @Patch(':id/avatar')
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      limits: {
+        fileSize: 2 * 1024 * 1024, // 2MB
+      },
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+          return callback(
+            new BadRequestException(
+              'Solo se permiten imágenes (JPEG, PNG, WebP)',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async uploadAvatar(
+    @Param() params: MongoIdDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No se proporcionó ningún archivo');
+    }
+
+    const user = await this.usersService.updateAvatar(params.id, file);
     return UserMapper.toResponse(user);
   }
 

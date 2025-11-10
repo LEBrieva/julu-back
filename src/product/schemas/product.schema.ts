@@ -40,6 +40,9 @@ export class Product {
   @Prop([String])
   tags?: string[];
 
+  @Prop({ type: Boolean, default: false })
+  destacado?: boolean;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -54,6 +57,7 @@ ProductSchema.index({ category: 1 });
 ProductSchema.index({ style: 1 });
 ProductSchema.index({ 'variants.size': 1 });
 ProductSchema.index({ 'variants.color': 1 });
+ProductSchema.index({ destacado: 1 });
 
 // Índices para búsqueda y queries comunes
 ProductSchema.index({ code: 1 });

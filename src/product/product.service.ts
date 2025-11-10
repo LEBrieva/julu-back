@@ -171,6 +171,28 @@ export class ProductService {
     return product;
   }
 
+  /**
+   * Obtiene los productos destacados (máximo 12)
+   * Solo productos activos y marcados como destacado
+   */
+  async findDestacados(): Promise<ProductDocument[]> {
+    return this.productModel
+      .find({
+        destacado: true,
+        status: ProductStatus.ACTIVE,
+      })
+      .limit(12)
+      .sort({ updatedAt: -1 }) // Más recientemente actualizados primero
+      .exec();
+  }
+
+  /**
+   * Cuenta cuántos productos están marcados como destacados actualmente
+   */
+  async countDestacados(): Promise<number> {
+    return this.productModel.countDocuments({ destacado: true });
+  }
+
   async findById(id: string): Promise<ProductDocument> {
     const product = await this.productModel.findById(id);
     if (!product) {

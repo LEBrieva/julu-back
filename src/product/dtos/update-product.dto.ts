@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -88,4 +89,8 @@ export class UpdateProductDto {
   @IsNumber()
   @Min(0)
   featuredImageIndex?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  destacado?: boolean;
 }

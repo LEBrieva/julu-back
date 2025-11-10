@@ -116,6 +116,22 @@ export class ProductController {
     return ProductMapper.toProductResponse(product);
   }
 
+  @Get('destacados')
+  @Public()
+  async getDestacados(): Promise<ProductResponse[]> {
+    const products = await this.productService.findDestacados();
+    return products.map((product) =>
+      ProductMapper.toProductResponse(product),
+    );
+  }
+
+  @Get('destacados/count')
+  @Roles(UserRole.ADMIN)
+  async countDestacados(): Promise<{ count: number }> {
+    const count = await this.productService.countDestacados();
+    return { count };
+  }
+
   @Patch(':id/variants/:sku/stock')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)

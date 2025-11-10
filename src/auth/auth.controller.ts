@@ -21,10 +21,15 @@ import type {
 } from 'src/user/interfaces/user.interface';
 import type { JwtUser } from 'src/commons/interfaces/jwt.interface';
 import { Throttle } from '@nestjs/throttler';
+import { UsersService } from 'src/user/user.service';
+import { UserMapper } from 'src/user/user.mapper';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Public()
   @Throttle({ short: { limit: 5, ttl: 60000 } }) // 5 intentos por minuto
@@ -134,7 +139,9 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getProfile(@Request() req: { user: JwtUser }): JwtUser {
-    return req.user;
+  async getProfile(@Request() req: { user: JwtUser }) {
+    // Obtener usuario completo desde la BD (incluye avatar, firstName, lastName, etc.)
+    const user = await this.usersService.findOne(req.user.userId);
+    return UserMapper.toResponse(user);
   }
 }

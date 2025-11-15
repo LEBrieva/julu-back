@@ -46,6 +46,8 @@ export class ProductMapper {
       totalVariants: product.variants.length,
       totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
       destacado: product.destacado,
+      images: product.images,
+      featuredImageIndex: product.featuredImageIndex,
     };
   }
 

@@ -12,6 +12,8 @@ export interface FilterProductResponse {
   totalStock: number;
   tags?: string[];
   destacado?: boolean;
+  images?: string[];
+  featuredImageIndex?: number;
 }
 
 export interface FilterProductsPaginatedResponse

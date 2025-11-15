@@ -132,6 +132,14 @@ export class ProductController {
     return { count };
   }
 
+  @Patch(':id/toggle-destacado')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async toggleDestacado(@Param('id') id: string): Promise<ProductResponse> {
+    const product = await this.productService.toggleDestacado(id);
+    return ProductMapper.toProductResponse(product);
+  }
+
   @Patch(':id/variants/:sku/stock')
   @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.OK)

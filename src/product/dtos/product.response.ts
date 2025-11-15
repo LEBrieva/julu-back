@@ -21,6 +21,7 @@ export interface ProductResponse {
   category: ProductCategory;
   style: ProductStyle;
   tags?: string[];
+  destacado?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

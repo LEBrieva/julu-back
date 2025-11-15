@@ -193,6 +193,32 @@ export class ProductService {
     return this.productModel.countDocuments({ destacado: true });
   }
 
+  /**
+   * Alterna el estado de destacado de un producto
+   * Valida que no se supere el límite de 12 productos destacados
+   */
+  async toggleDestacado(id: string): Promise<ProductDocument> {
+    const product = await this.productModel.findById(id);
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // Si se está activando, verificar el límite
+    if (!product.destacado) {
+      const currentCount = await this.countDestacados();
+      if (currentCount >= 12) {
+        throw new BadRequestException(
+          'Máximo de productos destacados alcanzado (12). Desactiva otro producto primero.',
+        );
+      }
+    }
+
+    // Toggle del valor actual
+    product.destacado = !product.destacado;
+    return product.save();
+  }
+
   async findById(id: string): Promise<ProductDocument> {
     const product = await this.productModel.findById(id);
     if (!product) {

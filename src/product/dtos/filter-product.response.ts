@@ -11,6 +11,7 @@ export interface FilterProductResponse {
   totalVariants: number;
   totalStock: number;
   tags?: string[];
+  destacado?: boolean;
 }
 
 export interface FilterProductsPaginatedResponse

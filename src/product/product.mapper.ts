@@ -27,6 +27,7 @@ export class ProductMapper {
       category: product.category,
       style: product.style,
       tags: product.tags,
+      destacado: product.destacado,
       createdAt: product.createdAt || new Date(),
       updatedAt: product.updatedAt || new Date(),
     };
@@ -44,6 +45,7 @@ export class ProductMapper {
       tags: product.tags,
       totalVariants: product.variants.length,
       totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
+      destacado: product.destacado,
     };
   }
 

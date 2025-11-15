@@ -38,6 +38,7 @@ export class ProductMapper {
       id: String(product._id),
       name: product.name,
       code: product.code,
+      description: product.description, // FASE 8b: Para modo list view
       basePrice: product.basePrice,
       status: product.status,
       category: product.category,

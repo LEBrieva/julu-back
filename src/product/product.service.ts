@@ -12,7 +12,7 @@ import { UpdateProductDto } from './dtos/update-product.dto';
 import { FilterProductDto } from './dtos/filter-product.dto';
 import { AddVariantDto, UpdateSingleVariantDto } from './dtos/variant.dto';
 import { CommonService } from 'src/commons/common.service';
-import { ProductStatus } from './product.enum';
+import { ProductStatus, ProductCategory } from './product.enum';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 
 @Injectable()
@@ -114,17 +114,25 @@ export class ProductService {
       search,
       page = 1,
       limit = 10,
+      // NUEVOS FILTROS AVANZADOS (FASE 8b)
+      minPrice,
+      maxPrice,
+      sortBy = 'newest',
+      sizes,
+      colors,
+      styles,
+      destacado,
     } = filterDto;
 
     const query: any = {
       status: ProductStatus.ACTIVE,
+      // HARDCODED: Solo remeras por ahora (FASE 8b)
+      category: ProductCategory.REMERA,
     };
 
-    if (category) query.category = category;
-    if (style) query.style = style;
+    // Filtros básicos (retrocompatibilidad)
+    // if (category) query.category = category; // Comentado: hardcoded arriba
     if (tags) query.tags = { $in: tags };
-    if (size) query['variants.size'] = size;
-    if (color) query['variants.color'] = color;
     if (search) {
       query.$or = [
         { code: { $regex: search, $options: 'i' } },
@@ -133,6 +141,51 @@ export class ProductService {
       ];
     }
 
+    // Filtros de estilos: priorizar array sobre singular
+    if (styles && styles.length > 0) {
+      query.style = { $in: styles };
+    } else if (style) {
+      query.style = style;
+    }
+
+    // Filtros de tallas: priorizar array sobre singular
+    if (sizes && sizes.length > 0) {
+      query['variants.size'] = { $in: sizes };
+    } else if (size) {
+      query['variants.size'] = size;
+    }
+
+    // Filtros de colores: priorizar array sobre singular
+    if (colors && colors.length > 0) {
+      query['variants.color'] = { $in: colors };
+    } else if (color) {
+      query['variants.color'] = color;
+    }
+
+    // Filtro de rango de precios (en variantes)
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      const priceQuery: any = {};
+      if (minPrice !== undefined) priceQuery.$gte = minPrice;
+      if (maxPrice !== undefined) priceQuery.$lte = maxPrice;
+      query['variants.price'] = priceQuery;
+    }
+
+    // Filtro de productos destacados
+    if (destacado !== undefined) {
+      query.destacado = destacado;
+    }
+
+    // Ordenamiento dinámico
+    const sortOptions: Record<string, any> = {
+      newest: { createdAt: -1 },
+      price_asc: { basePrice: 1 },
+      price_desc: { basePrice: -1 },
+      name_asc: { name: 1 },
+      name_desc: { name: -1 },
+    };
+    const sortCriteria = sortOptions[sortBy] || sortOptions.newest;
+
+    // Paginación
     const pageNum = page;
     const limitNum = limit;
     const skip = (pageNum - 1) * limitNum;
@@ -142,7 +195,7 @@ export class ProductService {
         .find(query)
         .skip(skip)
         .limit(limitNum)
-        .sort({ createdAt: -1 })
+        .sort(sortCriteria)
         .exec(),
       this.productModel.countDocuments(query),
     ]);

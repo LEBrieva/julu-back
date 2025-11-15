@@ -125,12 +125,14 @@ Currently implements **role-based authorization** with plans for permission-base
 
 **Product Schema** (`src/product/schemas/product.schema.ts`):
 - Code (unique identifier), name, basePrice, description
-- Images array, tags array
+- Images array (Cloudinary URLs), featuredImageIndex (default: 0), tags array
+- destacado flag (boolean, for featured products in home page)
 - **Variants**: Nested schema with size, color, stock, SKU, priceModifier
 - **Category**: Enum (CAMISETAS, BUZOS, PANTALONES, ACCESORIOS, OTROS)
 - **Style**: Enum (OVERSIZE, REGULAR, SLIM_FIT, CASUAL, DEPORTIVO, FORMAL, STREETWEAR, VINTAGE, MINIMALISTA)
 - **Status**: ACTIVE, INACTIVE, DISCONTINUED, COMING_SOON
 - Indexed on: code, name/description (text search), status, category, style, variant fields
+- **FilterProductResponse** includes images and featuredImageIndex for catalog display
 
 **RefreshToken Schema** (`src/auth/auth.schema.ts`):
 - Token (unique), userId reference
@@ -359,3 +361,10 @@ for i in {1..6}; do
     -d '{"email":"test@example.com","password":"wrong"}'
 done
 ```
+
+---
+
+**Last Updated**: 2025-11-15
+- Added `images` and `featuredImageIndex` fields to FilterProductResponse DTO for catalog display
+- Updated ProductMapper.toFilterResponse() to include image fields
+- Product schema now includes `destacado` flag for featured products in home page

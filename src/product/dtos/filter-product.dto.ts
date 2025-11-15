@@ -1,5 +1,13 @@
-import { IsOptional, IsEnum, IsString, IsArray } from 'class-validator';
-import { Transform } from 'class-transformer';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsArray,
+  IsNumber,
+  Min,
+  IsBoolean,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import {
   ProductColor,
   ProductSize,
@@ -48,4 +56,66 @@ export class FilterProductDto extends FilterBaseDto {
   @IsEnum(ProductStatus)
   @Transform(({ value }) => value?.toLowerCase())
   status?: ProductStatus;
+
+  // ==================== FILTROS AVANZADOS (FASE 8b) ====================
+
+  // Filtros de precio (rango en variantes)
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  minPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  maxPrice?: number;
+
+  // Ordenamiento dinámico
+  @IsOptional()
+  @IsEnum(['newest', 'price_asc', 'price_desc', 'name_asc', 'name_desc'])
+  sortBy?: 'newest' | 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc';
+
+  // Filtros múltiples de tallas (reemplaza size singular en queries complejas)
+  @IsOptional()
+  @IsArray()
+  @IsEnum(ProductSize, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map((s) => s.trim().toUpperCase());
+    }
+    return value;
+  })
+  sizes?: ProductSize[];
+
+  // Filtros múltiples de colores (reemplaza color singular en queries complejas)
+  @IsOptional()
+  @IsArray()
+  @IsEnum(ProductColor, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map((c) => c.trim().toLowerCase());
+    }
+    return value;
+  })
+  colors?: ProductColor[];
+
+  // Filtros múltiples de estilos (solo remeras: regular, oversize, slim_fit)
+  @IsOptional()
+  @IsArray()
+  @IsEnum(ProductStyle, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return value.split(',').map((s) => s.trim().toLowerCase());
+    }
+    return value;
+  })
+  styles?: ProductStyle[];
+
+  // Filtro de productos destacados
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  destacado?: boolean;
 }

@@ -4,6 +4,7 @@ export interface FilterProductResponse {
   id: string;
   name: string;
   code: string;
+  description?: string; // FASE 8b: Agregado para modo list view
   basePrice: number;
   status: string;
   category?: string;

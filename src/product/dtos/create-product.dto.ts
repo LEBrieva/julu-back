@@ -28,10 +28,6 @@ class CreateVariantDto {
   @IsNumber()
   @Min(0)
   stock: number;
-
-  @IsNumber()
-  @Min(0)
-  price: number; // Puede variar por variante
 }
 
 export class CreateProductDto {

@@ -11,10 +11,6 @@ export class AddVariantDto {
   @IsNumber()
   @Min(0)
   stock: number;
-
-  @IsNumber()
-  @Min(0)
-  price: number;
 }
 
 export class UpdateSingleVariantDto {
@@ -22,9 +18,4 @@ export class UpdateSingleVariantDto {
   @IsNumber()
   @Min(0)
   stock?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
 }

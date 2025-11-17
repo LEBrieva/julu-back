@@ -12,9 +12,6 @@ export class ProductVariant {
   @Prop({ required: true, min: 0 })
   stock: number;
 
-  @Prop({ required: true, min: 0 })
-  price: number; // Puede variar por variante
-
   @Prop()
   sku?: string; // Código único para esta variante
 }

@@ -54,7 +54,6 @@ export class ProductService {
       style,
       code,
       status,
-      tags,
       size,
       color,
       search,
@@ -68,7 +67,6 @@ export class ProductService {
     if (style) query.style = style;
     if (code) query.code = { $regex: code, $options: 'i' };
     if (status) query.status = status;
-    if (tags) query.tags = { $in: tags };
     if (size) query['variants.size'] = size;
     if (color) query['variants.color'] = color;
     if (search) {
@@ -108,7 +106,6 @@ export class ProductService {
     const {
       category,
       style,
-      tags,
       size,
       color,
       search,
@@ -121,7 +118,6 @@ export class ProductService {
       sizes,
       colors,
       styles,
-      destacado,
     } = filterDto;
 
     const query: any = {
@@ -132,7 +128,6 @@ export class ProductService {
 
     // Filtros básicos (retrocompatibilidad)
     // if (category) query.category = category; // Comentado: hardcoded arriba
-    if (tags) query.tags = { $in: tags };
     if (search) {
       query.$or = [
         { code: { $regex: search, $options: 'i' } },
@@ -168,11 +163,6 @@ export class ProductService {
       if (minPrice !== undefined) priceQuery.$gte = minPrice;
       if (maxPrice !== undefined) priceQuery.$lte = maxPrice;
       query['basePrice'] = priceQuery;
-    }
-
-    // Filtro de productos destacados
-    if (destacado !== undefined) {
-      query.destacado = destacado;
     }
 
     // Ordenamiento dinámico
@@ -247,11 +237,11 @@ export class ProductService {
   }
 
   /**
-   * Obtiene el rango de precios (mínimo y máximo) de todas las variantes
-   * de productos activos.
+   * Obtiene el rango de precios (mínimo y máximo) de productos activos.
    *
    * NOTA: Solo considera productos con status ACTIVE y category REMERA
-   * (hardcoded por FASE 8b).
+   * (hardcoded por FASE 8b). Usa basePrice ya que todas las variantes
+   * comparten el mismo precio.
    *
    * @returns Objeto con min y max precio, o valores por defecto si no hay productos
    */
@@ -264,16 +254,12 @@ export class ProductService {
           category: ProductCategory.REMERA,
         },
       },
-      // 2. Descomponer array de variantes en documentos individuales
-      {
-        $unwind: '$variants',
-      },
-      // 3. Agrupar y calcular min/max de todos los precios de variantes
+      // 2. Agrupar y calcular min/max de basePrice
       {
         $group: {
           _id: null,
-          minPrice: { $min: '$variants.price' },
-          maxPrice: { $max: '$variants.price' },
+          minPrice: { $min: '$basePrice' },
+          maxPrice: { $max: '$basePrice' },
         },
       },
     ]);
@@ -575,9 +561,6 @@ export class ProductService {
     // Actualizar solo los campos proporcionados
     if (updateVariantDto.stock !== undefined) {
       variant.stock = updateVariantDto.stock;
-    }
-    if (updateVariantDto.price !== undefined) {
-      variant.price = updateVariantDto.price;
     }
 
     return product.save();

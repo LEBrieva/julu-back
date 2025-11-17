@@ -32,16 +32,6 @@ export class FilterProductDto extends FilterBaseDto {
   @IsOptional()
   code?: string;
 
-  @IsOptional()
-  @IsArray()
-  @Transform(({ value }) => {
-    if (typeof value === 'string') {
-      return value.split(',').map((tag) => tag.trim());
-    }
-    return value;
-  })
-  tags?: string[];
-
   @IsEnum(ProductSize)
   @IsOptional()
   @Transform(({ value }) => value?.toLowerCase())
@@ -112,10 +102,4 @@ export class FilterProductDto extends FilterBaseDto {
     return value;
   })
   styles?: ProductStyle[];
-
-  // Filtro de productos destacados
-  @IsOptional()
-  @Type(() => Boolean)
-  @IsBoolean()
-  destacado?: boolean;
 }

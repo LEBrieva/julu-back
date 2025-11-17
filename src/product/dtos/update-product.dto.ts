@@ -32,11 +32,6 @@ export class UpdateVariantDto {
   @IsNumber()
   @Min(0)
   stock?: number;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
 }
 
 export class UpdateProductDto {

@@ -84,7 +84,7 @@ export class CartService {
         productId: new Types.ObjectId(addToCartDto.productId),
         variantSKU: addToCartDto.variantSKU,
         quantity: addToCartDto.quantity,
-        priceAtAdd: variant.price,
+        priceAtAdd: product.basePrice,
         productName: product.name,
         productImage: product.images?.[0],
         variantSize: variant.size,

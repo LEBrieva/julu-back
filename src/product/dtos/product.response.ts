@@ -5,7 +5,6 @@ export interface VariantResponse {
   size: string;
   color: string;
   stock: number;
-  price: number;
 }
 
 export interface ProductResponse {

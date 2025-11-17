@@ -21,7 +21,6 @@ export class ProductMapper {
         size: v.size,
         color: v.color,
         stock: v.stock,
-        price: v.price,
       })),
       status: product.status,
       category: product.category,

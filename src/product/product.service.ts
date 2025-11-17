@@ -162,12 +162,12 @@ export class ProductService {
       query['variants.color'] = color;
     }
 
-    // Filtro de rango de precios (en variantes)
+    // Filtro de rango de precios (por basePrice, que es el precio más bajo del producto)
     if (minPrice !== undefined || maxPrice !== undefined) {
       const priceQuery: any = {};
       if (minPrice !== undefined) priceQuery.$gte = minPrice;
       if (maxPrice !== undefined) priceQuery.$lte = maxPrice;
-      query['variants.price'] = priceQuery;
+      query['basePrice'] = priceQuery;
     }
 
     // Filtro de productos destacados
@@ -244,6 +244,49 @@ export class ProductService {
    */
   async countDestacados(): Promise<number> {
     return this.productModel.countDocuments({ destacado: true });
+  }
+
+  /**
+   * Obtiene el rango de precios (mínimo y máximo) de todas las variantes
+   * de productos activos.
+   *
+   * NOTA: Solo considera productos con status ACTIVE y category REMERA
+   * (hardcoded por FASE 8b).
+   *
+   * @returns Objeto con min y max precio, o valores por defecto si no hay productos
+   */
+  async getPriceRange(): Promise<{ min: number; max: number }> {
+    const result = await this.productModel.aggregate([
+      // 1. Filtrar solo productos activos de categoría REMERA
+      {
+        $match: {
+          status: ProductStatus.ACTIVE,
+          category: ProductCategory.REMERA,
+        },
+      },
+      // 2. Descomponer array de variantes en documentos individuales
+      {
+        $unwind: '$variants',
+      },
+      // 3. Agrupar y calcular min/max de todos los precios de variantes
+      {
+        $group: {
+          _id: null,
+          minPrice: { $min: '$variants.price' },
+          maxPrice: { $max: '$variants.price' },
+        },
+      },
+    ]);
+
+    // Si no hay productos, retornar valores por defecto
+    if (!result || result.length === 0) {
+      return { min: 0, max: 50000 };
+    }
+
+    return {
+      min: result[0].minPrice || 0,
+      max: result[0].maxPrice || 50000,
+    };
   }
 
   /**

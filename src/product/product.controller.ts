@@ -27,6 +27,7 @@ import { AddVariantDto, UpdateSingleVariantDto } from './dtos/variant.dto';
 import { ProductResponse } from './dtos/product.response';
 import { UploadImagesResponseDto } from './dto/upload-images.dto';
 import { SetFeaturedImageDto } from './dto/set-featured-image.dto';
+import { PriceRangeResponseDto } from './dtos/price-range.dto';
 
 @Controller('products')
 export class ProductController {
@@ -130,6 +131,13 @@ export class ProductController {
   async countDestacados(): Promise<{ count: number }> {
     const count = await this.productService.countDestacados();
     return { count };
+  }
+
+  @Get('price-range')
+  @Public()
+  async getPriceRange(): Promise<PriceRangeResponseDto> {
+    const range = await this.productService.getPriceRange();
+    return range;
   }
 
   @Patch(':id/toggle-destacado')

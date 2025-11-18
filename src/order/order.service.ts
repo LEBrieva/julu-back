@@ -389,4 +389,48 @@ export class OrderService {
 
     return order.save();
   }
+
+  /**
+   * Vincula una orden guest a un usuario registrado
+   * @param orderId ID de la orden a vincular
+   * @param userId ID del usuario al que vincular la orden
+   * @returns Orden actualizada y shippingAddress para crear Address
+   * @throws NotFoundException si la orden no existe
+   * @throws BadRequestException si la orden ya está vinculada a OTRO usuario
+   */
+  async linkGuestOrderToUser(
+    orderId: string,
+    userId: string,
+  ): Promise<{ order: OrderDocument; shippingAddress: any }> {
+    const order = await this.orderModel.findById(orderId);
+
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+
+    // VALIDACIÓN CRÍTICA: Verificar si ya está vinculada
+    if (order.userId !== null) {
+      // Mismo usuario intentando vincular de nuevo → idempotente
+      if (order.userId.toString() === userId) {
+        return {
+          order,
+          shippingAddress: order.shippingAddress,
+        };
+      }
+
+      // Usuario DIFERENTE → BLOQUEAR
+      throw new BadRequestException(
+        'This order is already linked to another account',
+      );
+    }
+
+    // Vincular orden al usuario
+    order.userId = new Types.ObjectId(userId);
+    await order.save();
+
+    return {
+      order,
+      shippingAddress: order.shippingAddress,
+    };
+  }
 }

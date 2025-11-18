@@ -12,7 +12,9 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
+import { UserRegistrationService } from './user-registration.service';
 import { LoginDto } from './dtos/login.dto';
+import { RegisterDto } from './dtos/register.dto';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
 import { Public } from 'src/commons/decorators/public.decorator';
 import type {
@@ -29,6 +31,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
+    private userRegistrationService: UserRegistrationService,
   ) {}
 
   @Public()
@@ -65,6 +68,19 @@ export class AuthController {
 
     // Solo devolver access token y user (NO refresh token)
     return { accessToken, user };
+  }
+
+  @Public()
+  @Throttle({ short: { limit: 3, ttl: 60000 } }) // 3 registros por minuto
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() registerDto: RegisterDto) {
+    const user =
+      await this.userRegistrationService.registerUser(registerDto);
+
+    return {
+      user: UserMapper.toResponse(user),
+    };
   }
 
   @Public()

@@ -59,12 +59,12 @@ pnpm run format
 
 The application follows NestJS modular architecture with clear domain separation:
 
-- **auth/** - Authentication & authorization (login, refresh tokens, JWT strategy)
+- **auth/** - Authentication & authorization (login, refresh tokens, JWT strategy, post-purchase registration)
 - **user/** - User management (CRUD operations, role/status handling)
 - **product/** - Product catalog (products with variants, categories, styles)
 - **address/** - Shipping addresses management (CRUD, default address handling)
 - **cart/** - Shopping cart functionality (add/update/remove items, stock validation)
-- **order/** - Order processing (create from cart, status tracking, order history)
+- **order/** - Order processing (create from cart, status tracking, order history, guest order linking)
 - **commons/** - Shared utilities (guards, decorators, DTOs, interfaces, strategies)
 
 ### Authentication Flow
@@ -250,6 +250,47 @@ The application implements a complete e-commerce purchase flow:
 6. **Order Management**: Users track orders, admins update status, users can cancel pending orders
 7. **Stock Control**: Stock automatically managed during order creation/cancellation
 
+### Guest Checkout & Post-Purchase Registration
+
+The application supports **guest checkout** where anonymous users can complete purchases without creating an account, with the option to register afterwards and link their order.
+
+**Guest Order Flow:**
+1. **Guest Checkout**: Anonymous users create orders via `POST /orders/guest`
+   - No authentication required (public endpoint)
+   - Order created with `userId: null` (identifies guest orders)
+   - Shipping address embedded in order (not saved to Address collection)
+   - Stock is decremented normally
+
+2. **Post-Purchase Registration**: Guests can create accounts and link their order
+   - Frontend passes `linkedGuestOrderId` in registration DTO
+   - `UserRegistrationService` (Facade) orchestrates the process:
+     - `AuthService.createUser()` - Creates user account
+     - `OrderService.linkGuestOrderToUser()` - Updates order with userId
+     - `AddressService.create()` - Saves shipping address as default
+   - All operations wrapped in try-catch (user created even if linking fails)
+
+**Order Linking Validation:**
+- `linkGuestOrderToUser()` validates order ownership:
+  - ✅ **Idempotent**: Same user linking twice → Success (no error)
+  - ❌ **Strict**: Different user trying to link → `BadRequestException`
+  - This prevents order hijacking while allowing retry scenarios
+
+**Architecture Pattern - Facade Service:**
+- `UserRegistrationService` acts as orchestrator (no circular dependencies)
+- `AuthModule` imports `OrderModule` and `AddressModule` (not vice versa)
+- Services remain decoupled (each has single responsibility)
+- Controller delegates all logic to facade service (thin controller pattern)
+
+**Key Endpoints:**
+```typescript
+POST /auth/register
+Body: {
+  email, password, firstName, lastName, phone?,
+  linkedGuestOrderId?  // Optional - links guest order if provided
+}
+Response: { user }
+```
+
 ### Product Variants
 
 Products use an **embedded variant pattern** (not separate collection):
@@ -364,7 +405,13 @@ done
 
 ---
 
-**Last Updated**: 2025-11-15
+**Last Updated**: 2025-11-18
+- **Post-Purchase Registration**: Implemented guest checkout with order linking functionality
+  - Added `UserRegistrationService` (Facade pattern) to orchestrate user creation + order linking + address creation
+  - Added `OrderService.linkGuestOrderToUser()` with ownership validation (prevents order hijacking)
+  - Added `POST /auth/register` endpoint with `linkedGuestOrderId` optional parameter
+  - AuthModule imports OrderModule and AddressModule (no circular dependencies)
+  - Idempotent linking (same user can retry), strict validation (different user blocked)
 - Added `images` and `featuredImageIndex` fields to FilterProductResponse DTO for catalog display
 - Updated ProductMapper.toFilterResponse() to include image fields
 - Product schema now includes `destacado` flag for featured products in home page

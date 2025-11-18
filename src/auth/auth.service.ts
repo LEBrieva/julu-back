@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,7 +13,7 @@ import { UsersService } from '../user/user.service';
 import { LoginDto } from './dtos/login.dto';
 import { RefreshToken, RefreshTokenDocument } from './auth.schema';
 import { UserDocument } from '../user/user.schema';
-import { UserRole } from '../user/user.enum';
+import { UserRole, UserStatus } from '../user/user.enum';
 import {
   ValidatedUser,
   LoginResponse,
@@ -135,6 +136,42 @@ export class AuthService {
 
   async logoutAll(userId: string): Promise<void> {
     await this.refreshTokenModel.updateMany({ userId }, { isRevoked: true });
+  }
+
+  /**
+   * Crea un nuevo usuario en el sistema
+   * @param registerDto Datos del usuario a crear
+   * @returns Usuario creado (sin password)
+   * @throws ConflictException si el email ya está registrado
+   */
+  async createUser(registerDto: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }): Promise<UserDocument> {
+    // 1. Verificar email único
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+
+    // 2. Hashear password
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+    // 3. Crear usuario (delegando a UsersService)
+    const user = await this.usersService.create({
+      email: registerDto.email,
+      password: hashedPassword,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      phone: registerDto.phone,
+      role: UserRole.USER,
+      status: UserStatus.ACTIVE,
+    });
+
+    return user;
   }
 
   private async generateRefreshToken(

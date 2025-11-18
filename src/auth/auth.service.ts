@@ -35,13 +35,32 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<ValidatedUser | null> {
+    console.log('🔑 [BACKEND] validateUser - Intentando login:', {
+      email,
+      passwordLength: password?.length,
+    });
+
     const user: UserDocument | null =
       await this.usersService.findByEmail(email);
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      console.log('❌ [BACKEND] Usuario no encontrado:', email);
+      return null;
+    }
+
+    console.log('👤 [BACKEND] Usuario encontrado, comparando passwords...');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('🔐 [BACKEND] Resultado comparación:', {
+      isValid: isPasswordValid,
+      passwordProvidedLength: password?.length,
+      hashInDBPreview: user.password.substring(0, 20) + '...',
+    });
+
+    if (isPasswordValid) {
       const { password: _, ...result } = user.toObject();
       return result as ValidatedUser;
     }
+
     return null;
   }
 
@@ -151,6 +170,16 @@ export class AuthService {
     lastName: string;
     phone?: string;
   }): Promise<UserDocument> {
+    // 🔍 LOG: Datos recibidos
+    console.log('📝 [BACKEND] createUser - Datos recibidos:', {
+      email: registerDto.email,
+      password: registerDto.password,
+      passwordLength: registerDto.password?.length,
+      firstName: registerDto.firstName,
+      lastName: registerDto.lastName,
+      phone: registerDto.phone,
+    });
+
     // 1. Verificar email único
     const existingUser = await this.usersService.findByEmail(registerDto.email);
     if (existingUser) {
@@ -159,6 +188,11 @@ export class AuthService {
 
     // 2. Hashear password
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    console.log('🔐 [BACKEND] Password hasheado:', {
+      originalLength: registerDto.password?.length,
+      hashLength: hashedPassword.length,
+      hashPreview: hashedPassword.substring(0, 20) + '...',
+    });
 
     // 3. Crear usuario (delegando a UsersService)
     const user = await this.usersService.create({
@@ -169,6 +203,11 @@ export class AuthService {
       phone: registerDto.phone,
       role: UserRole.USER,
       status: UserStatus.ACTIVE,
+    });
+
+    console.log('✅ [BACKEND] Usuario creado:', {
+      email: user.email,
+      id: user._id,
     });
 
     return user;

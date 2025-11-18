@@ -29,15 +29,10 @@ export class UsersService {
       throw new ConflictException('User with this email already exists');
     }
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      saltRounds,
-    );
-
+    // ⚠️ IMPORTANTE: El password ya viene hasheado desde AuthService.createUser()
+    // NO hashear de nuevo aquí para evitar doble hash
     const createdUser = new this.userModel({
       ...createUserDto,
-      password: hashedPassword,
     });
 
     return createdUser.save();

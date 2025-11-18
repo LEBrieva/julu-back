@@ -12,11 +12,13 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dtos/create-order.dto';
+import { CreateGuestOrderDto } from './dtos/create-guest-order.dto';
 import { UpdateOrderStatusDto } from './dtos/update-order-status.dto';
 import { FilterOrderDto } from './dtos/filter-order.dto';
 import { OrderMapper } from './order.mapper';
 import { OrderResponse, OrdersPaginatedResponse } from './dtos/order.response';
 import { Roles } from 'src/commons/decorators/roles.decorator';
+import { Public } from 'src/commons/decorators/public.decorator';
 import { UserRole } from 'src/user/user.enum';
 import type { AuthenticatedRequest } from 'src/commons/interfaces/authenticated-request.interface';
 
@@ -33,6 +35,16 @@ export class OrderController {
   ): Promise<OrderResponse> {
     const userId = req.user.userId;
     const order = await this.orderService.create(userId, createOrderDto);
+    return OrderMapper.toResponse(order);
+  }
+
+  @Post('guest')
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  async createGuest(
+    @Body() createGuestOrderDto: CreateGuestOrderDto,
+  ): Promise<OrderResponse> {
+    const order = await this.orderService.createGuestOrder(createGuestOrderDto);
     return OrderMapper.toResponse(order);
   }
 

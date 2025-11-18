@@ -45,6 +45,12 @@ export class ProductMapper {
       tags: product.tags,
       totalVariants: product.variants.length,
       totalStock: product.variants.reduce((sum, v) => sum + v.stock, 0),
+      variants: product.variants.map((v) => ({
+        sku: v.sku || '',
+        size: v.size,
+        color: v.color,
+        stock: v.stock,
+      })), // ✅ NUEVO: Incluir variantes completas para selectores en catálogo
       destacado: product.destacado,
       images: product.images,
       featuredImageIndex: product.featuredImageIndex,

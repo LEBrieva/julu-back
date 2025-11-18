@@ -15,6 +15,7 @@ export interface OrderItemResponse {
 
 export interface ShippingAddressResponse {
   fullName: string;
+  email: string;
   street: string;
   city: string;
   state: string;
@@ -35,6 +36,7 @@ export interface OrderResponse {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   notes?: string;
+  isGuest: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

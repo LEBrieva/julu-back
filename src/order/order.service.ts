@@ -7,17 +7,21 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument, OrderItem } from './order.schema';
 import { CreateOrderDto } from './dtos/create-order.dto';
+import { CreateGuestOrderDto } from './dtos/create-guest-order.dto';
 import { UpdateOrderStatusDto } from './dtos/update-order-status.dto';
 import { FilterOrderDto } from './dtos/filter-order.dto';
 import { CartService } from '../cart/cart.service';
 import { ProductService } from '../product/product.service';
 import { AddressService } from '../address/address.service';
 import { OrderStatus } from './order.enum';
+import { InjectModel as InjectUserModel } from '@nestjs/mongoose';
+import { User, UserDocument } from '../user/user.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectUserModel(User.name) private userModel: Model<UserDocument>,
     private cartService: CartService,
     private productService: ProductService,
     private addressService: AddressService,
@@ -37,6 +41,14 @@ export class OrderService {
     }
 
     return `ORD-${year}-${nextNumber.toString().padStart(5, '0')}`;
+  }
+
+  private async getUserEmail(userId: string): Promise<string> {
+    const user = await this.userModel.findById(userId).select('email').exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return user.email;
   }
 
   async create(
@@ -87,6 +99,9 @@ export class OrderService {
     // Generar número de orden
     const orderNumber = await this.generateOrderNumber();
 
+    // Obtener email del usuario
+    const userEmail = await this.getUserEmail(userId);
+
     // Crear orden
     const order = new this.orderModel({
       orderNumber,
@@ -94,6 +109,7 @@ export class OrderService {
       items: orderItems,
       shippingAddress: {
         fullName: address.fullName,
+        email: userEmail,
         street: address.street,
         city: address.city,
         state: address.state,
@@ -126,6 +142,106 @@ export class OrderService {
     return order;
   }
 
+  async createGuestOrder(
+    createGuestOrderDto: CreateGuestOrderDto,
+  ): Promise<OrderDocument> {
+    const { cart, shippingAddress, paymentMethod, shippingCost, notes } =
+      createGuestOrderDto;
+
+    // Validar que el carrito no esté vacío
+    if (cart.length === 0) {
+      throw new BadRequestException('Cart is empty');
+    }
+
+    // Crear items de la orden validando stock
+    const orderItems: OrderItem[] = [];
+    let subtotal = 0;
+
+    for (const item of cart) {
+      // Obtener producto y validar stock
+      const product = await this.productService.findById(item.productId);
+
+      // Buscar variante
+      const variant = product.variants.find(
+        (v) => v.sku === item.variantSKU,
+      );
+
+      if (!variant) {
+        throw new NotFoundException(
+          `Variant ${item.variantSKU} not found for product ${product.name}`,
+        );
+      }
+
+      // Validar stock
+      if (variant.stock < item.quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for ${product.name} (${variant.size}/${variant.color}). Available: ${variant.stock}`,
+        );
+      }
+
+      // Calcular precio (las variantes no tienen precio, usan basePrice del producto)
+      const price = product.basePrice;
+      const itemSubtotal = price * item.quantity;
+
+      orderItems.push({
+        productId: new Types.ObjectId(item.productId),
+        variantSKU: item.variantSKU,
+        productName: product.name,
+        productImage: product.images?.[0] || product.images?.[product.featuredImageIndex || 0],
+        variantSize: variant.size,
+        variantColor: variant.color,
+        quantity: item.quantity,
+        price,
+        subtotal: itemSubtotal,
+      });
+
+      subtotal += itemSubtotal;
+    }
+
+    // Calcular total
+    const finalShippingCost = shippingCost || 0;
+    const total = subtotal + finalShippingCost;
+
+    // Generar número de orden
+    const orderNumber = await this.generateOrderNumber();
+
+    // Crear orden con userId = null (guest order)
+    const order = new this.orderModel({
+      orderNumber,
+      userId: null, // Guest order
+      items: orderItems,
+      shippingAddress: {
+        fullName: shippingAddress.fullName,
+        email: shippingAddress.email,
+        street: shippingAddress.street,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        zipCode: shippingAddress.zipCode,
+        country: shippingAddress.country,
+        phone: shippingAddress.phone,
+      },
+      subtotal,
+      shippingCost: finalShippingCost,
+      total,
+      paymentMethod,
+      notes,
+    });
+
+    // Guardar orden
+    await order.save();
+
+    // Decrementar stock de productos
+    for (const item of cart) {
+      await this.productService.decreaseStock(
+        item.productId,
+        item.variantSKU,
+        item.quantity,
+      );
+    }
+
+    return order;
+  }
+
   async findAll(userId: string, isAdmin: boolean, filterDto: FilterOrderDto) {
     const {
       status,
@@ -135,6 +251,7 @@ export class OrderService {
       search,
       dateFrom,
       dateTo,
+      isGuest,
     } = filterDto;
 
     const query: any = {};
@@ -142,6 +259,11 @@ export class OrderService {
     // Si no es admin, solo ver sus propias órdenes
     if (!isAdmin) {
       query.userId = new Types.ObjectId(userId);
+    }
+
+    // Filtro por tipo de orden (guest vs registered)
+    if (isGuest !== undefined) {
+      query.userId = isGuest ? null : { $ne: null };
     }
 
     // Filtro por búsqueda (orderNumber)

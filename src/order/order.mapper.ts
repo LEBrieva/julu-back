@@ -23,6 +23,7 @@ export class OrderMapper {
 
     const shippingAddress: ShippingAddressResponse = {
       fullName: order.shippingAddress.fullName,
+      email: order.shippingAddress.email,
       street: order.shippingAddress.street,
       city: order.shippingAddress.city,
       state: order.shippingAddress.state,
@@ -43,6 +44,7 @@ export class OrderMapper {
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
       notes: order.notes,
+      isGuest: order.userId === null,
       createdAt: order.createdAt || new Date(),
       updatedAt: order.updatedAt || new Date(),
     };

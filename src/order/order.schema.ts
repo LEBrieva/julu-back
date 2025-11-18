@@ -64,8 +64,8 @@ export class Order {
   @Prop({ required: true, unique: true })
   orderNumber: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
-  userId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: false, index: true, default: null })
+  userId: Types.ObjectId | null;
 
   @Prop({ type: [OrderItem], required: true })
   items: OrderItem[];

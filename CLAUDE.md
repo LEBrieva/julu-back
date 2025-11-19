@@ -414,7 +414,24 @@ done
 
 ---
 
-**Last Updated**: 2025-11-18
+**Last Updated**: 2025-11-19
+
+### FASE 11 - User Profile & Password Management ✅
+- **Profile Management**:
+  - Added `PATCH /auth/profile` endpoint to update firstName, lastName, phone
+  - Created `UpdateProfileDto` with class-validator validations (min 2 chars for names)
+  - `AuthService.updateProfile()` returns full UserDocument after update
+  - Only authenticated users can update their own profile (extracted from JWT)
+- **Password Change**:
+  - Added `POST /auth/change-password` endpoint with rate limiting (5 attempts/minute)
+  - Created `ChangePasswordDto` with validations (min 6 chars for both passwords)
+  - `AuthService.changePassword()` validates:
+    - Current password is correct (bcrypt.compare)
+    - New password ≠ current password (bcrypt.compare before hashing)
+  - **Security**: Invalidates ALL refresh tokens after password change (forces logout on all devices)
+  - Calls `AuthService.logoutAll()` to revoke all active sessions
+
+### Previous Updates (2025-11-18)
 - **Post-Purchase Registration**: Implemented guest checkout with order linking functionality
   - Added `UserRegistrationService` (Facade pattern) to orchestrate user creation + order linking + address creation
   - Added `OrderService.linkGuestOrderToUser()` with ownership validation (prevents order hijacking)

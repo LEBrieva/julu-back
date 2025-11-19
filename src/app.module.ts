@@ -27,17 +27,17 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
       {
         name: 'short',
         ttl: 1000, // 1 segundo
-        limit: 3, // 3 requests
+        limit: 10, // 10 requests (aumentado de 3 para evitar bloqueos en carga de página)
       },
       {
         name: 'medium',
         ttl: 10000, // 10 segundos
-        limit: 20,
+        limit: 50, // Aumentado de 20 para permitir operaciones normales
       },
       {
         name: 'long',
         ttl: 60000, // 1 minuto
-        limit: 100,
+        limit: 200, // Aumentado de 100 para usuarios activos
       },
     ]),
     UsersModule,

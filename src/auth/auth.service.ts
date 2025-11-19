@@ -3,6 +3,8 @@ import {
   UnauthorizedException,
   ForbiddenException,
   ConflictException,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -190,6 +192,79 @@ export class AuthService {
       userAgent,
       ipAddress,
     });
+  }
+
+  /**
+   * Actualiza información del perfil del usuario
+   * Solo permite actualizar firstName, lastName y phone
+   */
+  async updateProfile(
+    userId: string,
+    updateData: { firstName?: string; lastName?: string; phone?: string },
+  ): Promise<UserDocument> {
+    // Actualizar directamente usando UsersService
+    const updatedUser = await this.usersService.update(userId, updateData);
+
+    // Obtener el UserDocument completo desde la BD
+    const userDocument = await this.usersService.findByEmail(updatedUser.email);
+
+    if (!userDocument) {
+      throw new NotFoundException('User not found after update');
+    }
+
+    return userDocument;
+  }
+
+  /**
+   * Cambia la contraseña del usuario
+   * Valida password actual y luego actualiza a nueva contraseña
+   * Invalida todos los refresh tokens del usuario (fuerza re-login en todos los dispositivos)
+   */
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    // 1. Obtener usuario con password (findByEmail retorna UserDocument completo)
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Obtener usuario completo con password desde findByEmail
+    const userWithPassword = await this.usersService.findByEmail(user.email);
+    if (!userWithPassword) {
+      throw new NotFoundException('User not found');
+    }
+
+    // 2. Validar password actual
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      userWithPassword.password,
+    );
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // 3. Validar que la nueva contraseña sea diferente
+    const isSamePassword = await bcrypt.compare(
+      newPassword,
+      userWithPassword.password,
+    );
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
+
+    // 4. Hashear nueva contraseña
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // 5. Actualizar contraseña
+    await this.usersService.update(userId, { password: hashedNewPassword });
+
+    // 6. Invalidar TODOS los refresh tokens del usuario (forzar re-login en todos los dispositivos)
+    await this.logoutAll(userId);
   }
 
   private getUserPermissions(role: UserRole): string[] {

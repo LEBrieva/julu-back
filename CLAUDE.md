@@ -97,6 +97,15 @@ The application implements an **Access Token + Refresh Token** strategy with Htt
 - NestJS automatically assigns result to `req.user`
 - Controllers access via `@Req() req: any` → `req.user.userId`
 
+**Profile & Password Management:**
+- `PATCH /auth/profile` - Update personal info (firstName, lastName, phone)
+- `POST /auth/change-password` - Change password with validation
+  - Validates current password with bcrypt.compare()
+  - Validates new password ≠ current password
+  - **Invalidates ALL refresh tokens** (forces re-login on all devices)
+  - Rate limited: 5 attempts/minute
+  - Only users can change their own password (extracted from JWT)
+
 Key implementation details:
 - JWT secret configured via `JWT_SECRET` environment variable
 - Refresh token schema includes metadata (userAgent, ipAddress, isRevoked flag)

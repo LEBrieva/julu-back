@@ -9,14 +9,19 @@ import {
   Res,
   UnauthorizedException,
   Body,
+  Patch,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { UserRegistrationService } from './user-registration.service';
 import { LoginDto } from './dtos/login.dto';
 import { RegisterDto } from './dtos/register.dto';
+import { UpdateProfileDto } from './dtos/update-profile.dto';
+import { ChangePasswordDto } from './dtos/change-password.dto';
 import { JwtAuthGuard } from 'src/commons/guards/jwt-auth.guard';
 import { Public } from 'src/commons/decorators/public.decorator';
+import { Roles } from 'src/commons/decorators/roles.decorator';
+import { UserRole } from 'src/user/user.enum';
 import type {
   LoginResponse,
   RefreshTokenResponse,
@@ -159,5 +164,40 @@ export class AuthController {
     // Obtener usuario completo desde la BD (incluye avatar, firstName, lastName, etc.)
     const user = await this.usersService.findOne(req.user.userId);
     return UserMapper.toResponse(user);
+  }
+
+  @Patch('profile')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Request() req: { user: JwtUser },
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    const user = await this.authService.updateProfile(
+      req.user.userId,
+      updateProfileDto,
+    );
+    return {
+      user: UserMapper.toResponse(user),
+    };
+  }
+
+  @Post('change-password')
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  @Throttle({ short: { limit: 5, ttl: 60000 } }) // 5 intentos por minuto
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Request() req: { user: JwtUser },
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    await this.authService.changePassword(
+      req.user.userId,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword,
+    );
+
+    return {
+      message: 'Password changed successfully',
+    };
   }
 }

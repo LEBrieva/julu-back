@@ -4,6 +4,7 @@ import {
   OrderResponse,
   OrderItemResponse,
   ShippingAddressResponse,
+  OrderListItemResponse,
   OrdersPaginatedResponse,
 } from './dtos/order.response';
 
@@ -35,6 +36,7 @@ export class OrderMapper {
     return {
       id: String(order._id),
       orderNumber: order.orderNumber,
+      userId: order.userId ? String(order.userId) : undefined,
       items,
       shippingAddress,
       subtotal: order.subtotal,
@@ -50,12 +52,30 @@ export class OrderMapper {
     };
   }
 
+  /**
+   * Mapea un OrderDocument a OrderListItemResponse (versión ligera para listados)
+   */
+  static toListItemResponse(order: OrderDocument): OrderListItemResponse {
+    return {
+      id: String(order._id),
+      orderNumber: order.orderNumber,
+      customerName: order.shippingAddress.fullName,
+      customerEmail: order.shippingAddress.email,
+      itemsCount: order.items.length,
+      total: order.total,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      isGuest: order.userId === null,
+      createdAt: order.createdAt || new Date(),
+    };
+  }
+
   static toPaginatedResponse(
     orders: OrderDocument[],
     pagination: PaginationMeta,
   ): OrdersPaginatedResponse {
     return {
-      data: orders.map((order) => this.toResponse(order)),
+      data: orders.map((order) => this.toListItemResponse(order)),
       pagination,
     };
   }

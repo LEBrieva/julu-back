@@ -27,6 +27,7 @@ export interface ShippingAddressResponse {
 export interface OrderResponse {
   id: string;
   orderNumber: string;
+  userId?: string; // ID del usuario (null si es guest)
   items: OrderItemResponse[];
   shippingAddress: ShippingAddressResponse;
   subtotal: number;
@@ -41,5 +42,22 @@ export interface OrderResponse {
   updatedAt: Date;
 }
 
+/**
+ * OrderListItemResponse - Versión ligera para listados (tabla admin)
+ * Aplanado: customerName y customerEmail directos (no anidados)
+ */
+export interface OrderListItemResponse {
+  id: string;
+  orderNumber: string;
+  customerName: string; // shippingAddress.fullName
+  customerEmail: string; // shippingAddress.email
+  itemsCount: number; // items.length
+  total: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  isGuest: boolean; // true = orden de invitado, false = usuario registrado
+  createdAt: Date;
+}
+
 export interface OrdersPaginatedResponse
-  extends PaginatedResponse<OrderResponse> {}
+  extends PaginatedResponse<OrderListItemResponse> {}

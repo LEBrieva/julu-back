@@ -414,7 +414,35 @@ done
 
 ---
 
-**Last Updated**: 2025-11-19
+**Last Updated**: 2025-11-20
+
+### Recent Updates (2025-11-20)
+
+**Order Response DTOs - Customer Info Optimization**:
+- **OrderListItemResponse** (nuevo DTO para listados):
+  - Agregado para optimizar respuesta de tabla de órdenes (admin)
+  - Campos `customerName` y `customerEmail` directos (aplanados desde shippingAddress)
+  - Campo `itemsCount` (calculado de items.length)
+  - **Sin JOIN** con tabla users → Usa snapshot histórico de shippingAddress
+  - Más eficiente para listados grandes (menos datos transmitidos)
+- **OrderResponse** (detalle de orden):
+  - Agregado campo `userId?: string` para identificar usuario propietario
+  - Permite lazy loading del perfil actual del usuario desde admin panel
+  - `undefined` para órdenes guest (isGuest: true)
+- **OrderMapper**:
+  - `toListItemResponse()`: Mapea a versión ligera con customerName/Email directos
+  - `toResponse()`: Incluye userId cuando existe (String(order.userId) || undefined)
+  - `toPaginatedResponse()`: Ahora usa toListItemResponse() para listados
+
+**Arquitectura de datos de cliente en órdenes**:
+- **Snapshot histórico** (shippingAddress): Refleja cliente en momento de compra
+  - Usado en tabla de órdenes (performance)
+  - Preserva integridad histórica (legal/contable)
+  - Funciona para guest y registered orders
+- **Perfil actual** (via userId): Accesible desde detalle de orden
+  - Lazy loading solo cuando admin hace clic en "Ver perfil actual"
+  - GET /users/:userId (1 request bajo demanda)
+  - Muestra datos actualizados del usuario
 
 ### FASE 11 - User Profile & Password Management ✅
 - **Profile Management**:
